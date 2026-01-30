@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { type Profile } from "@/types/database.types";
@@ -129,9 +130,11 @@ export default async function DashboardPage() {
                         <p className="text-sm text-muted mb-4">
                             Track how you&apos;re feeling today
                         </p>
-                        <Button variant="primary" size="md" className="w-full" disabled>
-                            Coming Soon
-                        </Button>
+                        <Link href="/dashboard/log" className="w-full">
+                            <Button variant="primary" size="md" className="w-full">
+                                Log Symptoms
+                            </Button>
+                        </Link>
                     </Card>
 
                     <Card hover padding="lg" className="text-center">
