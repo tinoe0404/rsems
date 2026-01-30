@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScheduleModal } from "@/components/admin/ScheduleModal";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 interface PatientLogInfo {
     log_id: string;
@@ -166,8 +167,12 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
                         <tbody className="divide-y divide-gray-100">
                             {patients.length === 0 ? (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                        No logs found for today.
+                                    <td colSpan={5} className="p-4">
+                                        <EmptyState
+                                            title="No Patient Logs"
+                                            description="No symptom logs have been submitted today."
+                                            className="border-none bg-transparent"
+                                        />
                                     </td>
                                 </tr>
                             ) : (
