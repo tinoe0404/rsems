@@ -1,10 +1,12 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Heart, Shield, Users } from "lucide-react";
 
 export default function Home() {
+  const router = useRouter();
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -40,7 +42,7 @@ export default function Home() {
               size="lg"
               variant="primary"
               className="w-full sm:w-auto"
-              onClick={() => console.log("Patient Login")}
+              onClick={() => router.push("/login")}
             >
               <Users className="mr-2 h-5 w-5" />
               Patient Login
@@ -49,7 +51,7 @@ export default function Home() {
               size="lg"
               variant="outline"
               className="w-full sm:w-auto"
-              onClick={() => console.log("Clinician Login")}
+              onClick={() => router.push("/login")}
             >
               <Shield className="mr-2 h-5 w-5" />
               Clinician Login
