@@ -17,6 +17,15 @@ export const metadata: Metadata = {
 };
 
 import { Toaster } from "sonner";
+import { OfflineIndicator } from "@/components/ui/OfflineIndicator";
+import type { Viewport } from "next";
+
+export const viewport: Viewport = {
+  themeColor: "#00897B",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export default function RootLayout({
   children,
@@ -25,13 +34,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"
           forcedTheme="light"
-          enableSystem={false}
           disableTransitionOnChange
         >
+          <OfflineIndicator />
           {children}
           <Toaster position="top-right" richColors />
         </ThemeProvider>
