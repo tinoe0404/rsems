@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
+/* RSEMS Medical-Grade Design System */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary Colors - Calming Medical Teal */
+  --primary: #00897B;
+  --primary-dark: #00695C;
+  --primary-light: #4DB6AC;
+  
+  /* Neutral Colors - Eye-Strain Optimized */
+  --background: #F8FAFC;
+  --surface: #FFFFFF;
+  --foreground: #1E293B;
+  --muted: #64748B;
+  --border: #E2E8F0;
+  
+  /* Semantic Colors - Medical Context */
+  --alert: #EF4444;
+  --warning: #F59E0B;
+  --success: #10B981;
+  --info: #3B82F6;
+  
+  /* Shadows for depth */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
 }
 
 @theme inline {
+  /* Map custom colors to Tailwind */
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-alert: var(--alert);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  
+  /* Typography */
+  --font-sans: var(--font-inter);
+  
+  /* Spacing for touch-friendly UI */
+  --spacing-touch: 44px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
