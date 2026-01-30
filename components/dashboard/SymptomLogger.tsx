@@ -19,9 +19,12 @@ import {
     Trash2,
     CheckCircle,
     Menu,
-    X
+    X,
+    AlertTriangle,
+    Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { submitDailyLog, type LogSubmissionResult } from "@/actions/submitLog";
 
 interface SymptomEntry {
     id: number;
@@ -41,6 +44,8 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
     const [activeSymptom, setActiveSymptom] = useState<SymptomMaster | null>(null);
     const [severity, setSeverity] = useState<0 | 1 | 2 | 3>(0);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submissionResult, setSubmissionResult] = useState<LogSubmissionResult | null>(null);
 
     // Group categories
     const categories = useMemo(() => {
@@ -121,6 +126,103 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
         { value: 2, label: "Moderate", color: "bg-warning/10 border-warning/30 hover:border-warning text-warning-dark", active: "ring-2 ring-warning bg-warning text-white border-warning" },
         { value: 3, label: "Severe", color: "bg-alert/10 border-alert/30 hover:border-alert text-alert-dark", active: "ring-2 ring-alert bg-alert text-white border-alert" },
     ] as const;
+
+    const handleSubmit = async () => {
+        if (loggedSymptoms.length === 0) return;
+
+        setIsSubmitting(true);
+        try {
+            // Convert UI symptom entries to DB format if strictly needed, 
+            // but they match close enough (id vs symptom_id mapping might be needed if types differ)
+            // Our UI State: { id, name, category, severity }
+            // DB Type: { symptom_id, symptom_name, severity, ... }
+
+            const payload = loggedSymptoms.map(s => ({
+                symptom_id: s.id,
+                symptom_name: s.name,
+                severity: s.severity
+            }));
+
+            const result = await submitDailyLog(payload);
+
+            if (result.success) {
+                setSubmissionResult(result);
+                setLoggedSymptoms([]); // Clear local state
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                alert(result.error || "Failed to submit log");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Something went wrong");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const getSeverityColor = (score: number) => {
+        if (score >= 3) return "bg-alert/10 text-alert border-alert";
+        if (score === 2) return "bg-warning/10 text-warning-dark border-warning";
+        return "bg-success/10 text-success-dark border-success";
+    };
+
+    // If we have a result, show the Feedback Card
+    if (submissionResult && submissionResult.success) {
+        const score = submissionResult.score || 0;
+
+        return (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <Card padding="lg" className={cn("border-2 text-center py-10", getSeverityColor(score))}>
+                    <div className={cn("inline-flex items-center justify-center p-4 rounded-full mb-6 bg-white shadow-sm")}>
+                        {score >= 3 ? (
+                            <AlertTriangle className="h-12 w-12 text-alert" />
+                        ) : score === 2 ? (
+                            <AlertCircle className="h-12 w-12 text-warning" />
+                        ) : (
+                            <CheckCircle className="h-12 w-12 text-success" />
+                        )}
+                    </div>
+
+                    <h2 className="text-2xl font-bold mb-2 text-foreground">
+                        {score >= 3 ? "Urgent Attention Required" :
+                            score === 2 ? "Monitor Closely" :
+                                "Log Submitted Successfully"}
+                    </h2>
+
+                    <p className="text-lg mb-8 max-w-md mx-auto">
+                        {score >= 3 ? "Your reported symptoms indicate you may need medical attention. The clinical team has been notified." :
+                            score === 2 ? "Your symptoms are moderate. Please rest and monitor them closely. If they worsen, contact the clinic." :
+                                "Your symptoms are within a normal range. Keep drinking water and getting rest."}
+                    </p>
+
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        onClick={() => setSubmissionResult(null)}
+                        className="w-full sm:w-auto min-w-[200px]"
+                    >
+                        Back to Dashboard
+                    </Button>
+                </Card>
+
+                {score >= 3 && (
+                    <Card padding="md" className="bg-white border-alert/20">
+                        <div className="flex items-start gap-3">
+                            <Info className="h-5 w-5 text-alert flex-shrink-0 mt-0.5" />
+                            <div className="text-left">
+                                <p className="font-semibold text-alert-dark">Next Steps</p>
+                                <ul className="list-disc list-inside text-sm text-foreground space-y-1 mt-1">
+                                    <li>Do not panic.</li>
+                                    <li>Call the emergency hotline if you are in severe pain.</li>
+                                    <li>A nurse will review your log shortly.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </Card>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -227,9 +329,10 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                         <Button
                             size="lg"
                             className="w-full"
-                            onClick={() => console.log("Submitting log:", loggedSymptoms)}
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
                         >
-                            Add to Daily Log
+                            {isSubmitting ? "Submitting..." : "Submit Daily Log"}
                         </Button>
                     </div>
                 </div>
