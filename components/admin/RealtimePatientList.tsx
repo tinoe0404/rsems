@@ -10,9 +10,11 @@ import {
     CheckCircle,
     AlertCircle,
     Clock,
-    ArrowRight
+    ArrowRight,
+    CalendarPlus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ScheduleModal } from "@/components/admin/ScheduleModal";
 
 interface PatientLogInfo {
     log_id: string;
@@ -32,6 +34,8 @@ interface RealtimePatientListProps {
 
 export function RealtimePatientList({ initialPatients }: RealtimePatientListProps) {
     const [patients, setPatients] = useState<PatientLogInfo[]>(initialPatients);
+    const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+    const [selectedPatient, setSelectedPatient] = useState<{ id: string, name: string } | null>(null);
     const router = useRouter();
     const supabase = createClient();
 
@@ -129,6 +133,11 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
         console.log("Playing alert sound...");
     };
 
+    const handleReviewClick = (patient: PatientLogInfo) => {
+        setSelectedPatient({ id: patient.user_id, name: patient.full_name });
+        setScheduleModalOpen(true);
+    };
+
     const getTimeAgo = (dateStr: string) => {
         const diff = new Date().getTime() - new Date(dateStr).getTime();
         const mins = Math.floor(diff / 60000);
@@ -141,76 +150,90 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                    <thead className="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                            <th className="px-6 py-4 font-semibold text-gray-600">Patient</th>
-                            <th className="px-6 py-4 font-semibold text-gray-600">Diagnosis</th>
-                            <th className="px-6 py-4 font-semibold text-gray-600">Status</th>
-                            <th className="px-6 py-4 font-semibold text-gray-600">Last Update</th>
-                            <th className="px-6 py-4 font-semibold text-gray-600 text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {patients.length === 0 ? (
+        <>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
-                                <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                                    No logs found for today.
-                                </td>
+                                <th className="px-6 py-4 font-semibold text-gray-600">Patient</th>
+                                <th className="px-6 py-4 font-semibold text-gray-600">Diagnosis</th>
+                                <th className="px-6 py-4 font-semibold text-gray-600">Status</th>
+                                <th className="px-6 py-4 font-semibold text-gray-600">Last Update</th>
+                                <th className="px-6 py-4 font-semibold text-gray-600 text-right">Action</th>
                             </tr>
-                        ) : (
-                            patients.map((patient) => (
-                                <tr
-                                    key={patient.log_id}
-                                    className={cn(
-                                        "group transition-all duration-500 hover:bg-gray-50 animate-in fade-in slide-in-from-top-2",
-                                        patient.calculated_risk_score >= 3 ? "bg-red-50/50 hover:bg-red-50 border-l-4 border-l-alert" : ""
-                                    )}
-                                >
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            {patient.calculated_risk_score >= 3 && (
-                                                <div className="h-2 w-2 rounded-full bg-alert animate-pulse" />
-                                            )}
-                                            <span className="font-bold text-gray-900">{patient.full_name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-600">
-                                        {patient.cancer_type}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        {patient.calculated_risk_score >= 3 ? (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-alert text-white shadow-sm">
-                                                CRITICAL
-                                            </span>
-                                        ) : patient.calculated_risk_score === 2 ? (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-warning text-white border border-warning-dark/20">
-                                                MONITOR
-                                            </span>
-                                        ) : (
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-success text-white">
-                                                STABLE
-                                            </span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4 text-gray-500 flex items-center gap-2">
-                                        <Clock className="h-3 w-3" />
-                                        {getTimeAgo(patient.created_at)}
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <Button variant="ghost" size="sm" className="text-primary hover:text-primary-dark hover:bg-primary/10">
-                                            Review
-                                            <ArrowRight className="ml-1 h-3 w-3" />
-                                        </Button>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {patients.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                        No logs found for today.
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : (
+                                patients.map((patient) => (
+                                    <tr
+                                        key={patient.log_id}
+                                        className={cn(
+                                            "group transition-all duration-500 hover:bg-gray-50 animate-in fade-in slide-in-from-top-2",
+                                            patient.calculated_risk_score >= 3 ? "bg-red-50/50 hover:bg-red-50 border-l-4 border-l-alert" : ""
+                                        )}
+                                    >
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center gap-3">
+                                                {patient.calculated_risk_score >= 3 && (
+                                                    <div className="h-2 w-2 rounded-full bg-alert animate-pulse" />
+                                                )}
+                                                <span className="font-bold text-gray-900">{patient.full_name}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">
+                                            {patient.cancer_type}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {patient.calculated_risk_score >= 3 ? (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-alert text-white shadow-sm">
+                                                    CRITICAL
+                                                </span>
+                                            ) : patient.calculated_risk_score === 2 ? (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-warning text-white border border-warning-dark/20">
+                                                    MONITOR
+                                                </span>
+                                            ) : (
+                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-success text-white">
+                                                    STABLE
+                                                </span>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-500 flex items-center gap-2">
+                                            <Clock className="h-3 w-3" />
+                                            {getTimeAgo(patient.created_at)}
+                                        </td>
+                                        <td className="px-6 py-4 text-right">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleReviewClick(patient)}
+                                                className="text-primary hover:text-primary-dark hover:bg-primary/10"
+                                            >
+                                                Review
+                                                <ArrowRight className="ml-1 h-3 w-3" />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+
+            <ScheduleModal
+                isOpen={scheduleModalOpen}
+                onClose={() => setScheduleModalOpen(false)}
+                patientId={selectedPatient?.id || null}
+                patientName={selectedPatient?.name || null}
+            />
+        </>
     );
 }
