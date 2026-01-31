@@ -2,152 +2,94 @@
 
 import { useState, useMemo } from "react";
 import { type SymptomMaster } from "@/types/database.types";
-import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Modal } from "@/components/ui/Modal";
 import {
     Search,
-    Battery,
-    Droplet,
-    Thermometer,
     AlertCircle,
-    Activity,
-    Zap,
-    Moon,
-    Plus,
-    Trash2,
     CheckCircle,
-    Menu,
-    X,
     AlertTriangle,
-    Info
+    Info,
+    ArrowRight,
+    ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { submitDailyLog, type LogSubmissionResult } from "@/actions/submitLog";
-
-interface SymptomEntry {
-    id: number;
-    name: string;
-    category: string;
-    severity: 0 | 1 | 2 | 3;
-}
 
 interface SymptomLoggerProps {
     symptoms: SymptomMaster[];
 }
 
+type Step = 'select' | 'grade' | 'success';
+
 export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
+    const [step, setStep] = useState<Step>('select');
     const [searchQuery, setSearchQuery] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [loggedSymptoms, setLoggedSymptoms] = useState<SymptomEntry[]>([]);
-    const [activeSymptom, setActiveSymptom] = useState<SymptomMaster | null>(null);
-    const [severity, setSeverity] = useState<0 | 1 | 2 | 3>(0);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    // Selection State
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+    // Grading State
+    const [grades, setGrades] = useState<Record<number, 0 | 1 | 2 | 3>>({});
+
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionResult, setSubmissionResult] = useState<LogSubmissionResult | null>(null);
 
-    // Group categories
-    const categories = useMemo(() => {
-        return Array.from(new Set(symptoms.map((s) => s.category)));
-    }, [symptoms]);
-
-    // Filter symptoms
+    // Filter symptoms (just search, no categories)
     const filteredSymptoms = useMemo(() => {
-        let filtered = symptoms;
-
-        if (selectedCategory) {
-            filtered = filtered.filter((s) => s.category === selectedCategory);
-        }
-
-        if (searchQuery) {
-            const query = searchQuery.toLowerCase();
-            filtered = filtered.filter((s) =>
-                s.name.toLowerCase().includes(query) ||
-                s.category.toLowerCase().includes(query)
-            );
-        }
-
-        return filtered;
-    }, [symptoms, selectedCategory, searchQuery]);
+        if (!searchQuery) return symptoms;
+        const query = searchQuery.toLowerCase();
+        return symptoms.filter((s) =>
+            s.name.toLowerCase().includes(query)
+        );
+    }, [symptoms, searchQuery]);
 
     // Handlers
-    const openSymptomModal = (symptom: SymptomMaster) => {
-        setActiveSymptom(symptom);
-        setSeverity(symptom.default_severity || 0); // Default or 0
-        setIsModalOpen(true);
-    };
-
-    const addSymptom = () => {
-        if (!activeSymptom) return;
-
-        // Check if already logged, update if so
-        const existingIndex = loggedSymptoms.findIndex(s => s.id === activeSymptom.id);
-
-        const newEntry: SymptomEntry = {
-            id: activeSymptom.id,
-            name: activeSymptom.name,
-            category: activeSymptom.category,
-            severity: severity,
-        };
-
-        if (existingIndex >= 0) {
-            const updated = [...loggedSymptoms];
-            updated[existingIndex] = newEntry;
-            setLoggedSymptoms(updated);
+    const toggleSymptom = (id: number) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) {
+            next.delete(id);
         } else {
-            setLoggedSymptoms([...loggedSymptoms, newEntry]);
+            next.add(id);
         }
-
-        setIsModalOpen(false);
-        setActiveSymptom(null);
+        setSelectedIds(next);
     };
 
-    const removeSymptom = (id: number) => {
-        setLoggedSymptoms(loggedSymptoms.filter(s => s.id !== id));
+    const handleGradeChange = (id: number, severity: 0 | 1 | 2 | 3) => {
+        setGrades(prev => ({ ...prev, [id]: severity }));
     };
 
-    const getCategoryIcon = (category: string) => {
-        switch (category.toLowerCase()) {
-            case 'general': return <Battery className="h-5 w-5" />;
-            case 'pain': return <Zap className="h-5 w-5" />;
-            case 'toilet/bowel':
-            case 'toilet/urinary': return <Droplet className="h-5 w-5" />;
-            case 'skin': return <Activity className="h-5 w-5" />;
-            case 'sleep/mental': return <Moon className="h-5 w-5" />;
-            case 'nausea/vomiting': return <Thermometer className="h-5 w-5" />;
-            default: return <Activity className="h-5 w-5" />;
-        }
-    };
+    const proceedToGrading = () => {
+        if (selectedIds.size === 0) return;
 
-    const severityLevels = [
-        { value: 0, label: "None", color: "bg-surface border-border hover:border-gray-400 text-foreground", active: "ring-2 ring-gray-400 border-gray-400" },
-        { value: 1, label: "Mild", color: "bg-success/10 border-success/30 hover:border-success text-success-dark", active: "ring-2 ring-success bg-success text-white border-success" },
-        { value: 2, label: "Moderate", color: "bg-warning/10 border-warning/30 hover:border-warning text-warning-dark", active: "ring-2 ring-warning bg-warning text-white border-warning" },
-        { value: 3, label: "Severe", color: "bg-alert/10 border-alert/30 hover:border-alert text-alert-dark", active: "ring-2 ring-alert bg-alert text-white border-alert" },
-    ] as const;
+        // Initialize grades for selected items if not present
+        const initialGrades = { ...grades };
+        selectedIds.forEach(id => {
+            if (initialGrades[id] === undefined) {
+                // Find default severity or set to 1 (Mild) as reasonable default for reported symptom
+                const s = symptoms.find(sym => sym.id === id);
+                initialGrades[id] = s?.default_severity || 1;
+            }
+        });
+        setGrades(initialGrades);
+        setStep('grade');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     const handleSubmit = async () => {
-        if (loggedSymptoms.length === 0) return;
-
         setIsSubmitting(true);
         try {
-            // Convert UI symptom entries to DB format if strictly needed, 
-            // but they match close enough (id vs symptom_id mapping might be needed if types differ)
-            // Our UI State: { id, name, category, severity }
-            // DB Type: { symptom_id, symptom_name, severity, ... }
-
-            const payload = loggedSymptoms.map(s => ({
-                symptom_id: s.id,
-                symptom_name: s.name,
-                severity: s.severity
+            const payload = Array.from(selectedIds).map(id => ({
+                symptom_id: id,
+                symptom_name: symptoms.find(s => s.id === id)?.name || "Unknown",
+                severity: grades[id] || 1
             }));
 
             const result = await submitDailyLog(payload);
 
             if (result.success) {
                 setSubmissionResult(result);
-                setLoggedSymptoms([]); // Clear local state
+                setStep('success');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
                 alert(result.error || "Failed to submit log");
@@ -160,16 +102,22 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
         }
     };
 
+    const severityLevels = [
+        { value: 1, label: "Mild", color: "bg-success/10 border-success/30 text-success-dark", ring: "ring-success" },
+        { value: 2, label: "Moderate", color: "bg-warning/10 border-warning/30 text-warning-dark", ring: "ring-warning" },
+        { value: 3, label: "Severe", color: "bg-alert/10 border-alert/30 text-alert-dark", ring: "ring-alert" },
+    ] as const;
+
     const getSeverityColor = (score: number) => {
         if (score >= 3) return "bg-alert/10 text-alert border-alert";
         if (score === 2) return "bg-warning/10 text-warning-dark border-warning";
         return "bg-success/10 text-success-dark border-success";
     };
 
-    // If we have a result, show the Feedback Card
-    if (submissionResult && submissionResult.success) {
-        const score = submissionResult.score || 0;
+    // --- RENDER STEPS ---
 
+    if (step === 'success' && submissionResult) {
+        const score = submissionResult.score || 0;
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <Card padding="lg" className={cn("border-2 text-center py-10", getSeverityColor(score))}>
@@ -186,109 +134,146 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                     <h2 className="text-2xl font-bold mb-2 text-foreground">
                         {score >= 3 ? "Urgent Attention Required" :
                             score === 2 ? "Monitor Closely" :
-                                "Log Submitted Successfully"}
+                                "Log Submitted"}
                     </h2>
 
                     <p className="text-lg mb-8 max-w-md mx-auto">
                         {score >= 3 ? "Your reported symptoms indicate you may need medical attention. The clinical team has been notified." :
-                            score === 2 ? "Your symptoms are moderate. Please rest and monitor them closely. If they worsen, contact the clinic." :
-                                "Your symptoms are within a normal range. Keep drinking water and getting rest."}
+                            score === 2 ? "Your symptoms are moderate. Please rest and monitor them closely." :
+                                "Your symptoms have been logged. Keep drinking water and getting rest."}
                     </p>
 
                     <Button
                         variant="primary"
                         size="lg"
-                        onClick={() => setSubmissionResult(null)}
-                        className="w-full sm:w-auto min-w-[200px]"
+                        onClick={() => {
+                            setStep('select');
+                            setSelectedIds(new Set());
+                            setGrades({});
+                            setSubmissionResult(null);
+                        }}
+                        className="w-full sm:w-auto"
                     >
                         Back to Dashboard
                     </Button>
                 </Card>
-
-                {score >= 3 && (
-                    <Card padding="md" className="bg-white border-alert/20">
-                        <div className="flex items-start gap-3">
-                            <Info className="h-5 w-5 text-alert flex-shrink-0 mt-0.5" />
-                            <div className="text-left">
-                                <p className="font-semibold text-alert-dark">Next Steps</p>
-                                <ul className="list-disc list-inside text-sm text-foreground space-y-1 mt-1">
-                                    <li>Do not panic.</li>
-                                    <li>Call the emergency hotline if you are in severe pain.</li>
-                                    <li>A nurse will review your log shortly.</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </Card>
-                )}
             </div>
         );
     }
 
+    if (step === 'grade') {
+        const selectedSymptoms = symptoms.filter(s => selectedIds.has(s.id));
+        return (
+            <div className="space-y-8 animate-in slide-in-from-right-8 duration-300">
+                <div>
+                    <h2 className="text-2xl font-bold text-foreground mb-2">Grade Severity</h2>
+                    <p className="text-muted">For each symptom, how severe is it right now?</p>
+                </div>
+
+                <div className="space-y-6">
+                    {selectedSymptoms.map(symptom => (
+                        <div key={symptom.id} className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
+                            <h3 className="text-lg font-semibold text-slate-800 mb-4">{symptom.name}</h3>
+                            <div className="grid grid-cols-3 gap-3">
+                                {severityLevels.map((level) => {
+                                    const isSelected = grades[symptom.id] === level.value;
+                                    return (
+                                        <button
+                                            key={level.value}
+                                            onClick={() => handleGradeChange(symptom.id, level.value as any)}
+                                            className={cn(
+                                                "flex flex-col items-center justify-center p-3 rounded-lg border transition-all duration-200",
+                                                isSelected
+                                                    ? `ring-2 ${level.ring} ${level.color} bg-opacity-100 font-bold shadow-sm`
+                                                    : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100"
+                                            )}
+                                        >
+                                            <span className="text-lg mb-1">{level.value}</span>
+                                            <span className="text-xs uppercase tracking-wide">{level.label}</span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="flex gap-4 pt-4 sticky bottom-6 z-20">
+                    <Button
+                        variant="outline"
+                        size="lg"
+                        className="flex-1 bg-white shadow-lg"
+                        onClick={() => setStep('select')}
+                    >
+                        <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                    </Button>
+                    <Button
+                        variant="primary"
+                        size="lg"
+                        className="flex-1 shadow-lg shadow-primary/20"
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? "Submitting..." : "Submit Log"}
+                    </Button>
+                </div>
+                <div className="h-12" />
+            </div>
+        );
+    }
+
+    // Step: 'select'
     return (
         <div className="space-y-6">
             {/* Search Bar */}
-            <div className="relative">
+            <div className="relative sticky top-20 z-20 bg-background/95 backdrop-blur-sm py-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted" />
                 <input
                     type="text"
-                    placeholder="Search symptoms (e.g., pain, nausea)..."
-                    className="w-full h-12 pl-10 pr-4 rounded-xl border border-border bg-surface text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-lg"
+                    placeholder="Search symptoms..."
+                    className="w-full h-12 pl-10 pr-4 rounded-xl border border-border bg-surface text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-lg shadow-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
 
-            {/* Category Filter (Horizontal Scroll) */}
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
-                <button
-                    onClick={() => setSelectedCategory(null)}
-                    className={cn(
-                        "flex items-center gap-2 px-4 py-2 rounded-full border whitespace-nowrap transition-colors",
-                        selectedCategory === null
-                            ? "bg-primary text-white border-primary"
-                            : "bg-surface text-foreground border-border hover:border-primary/50"
-                    )}
-                >
-                    <Menu className="h-4 w-4" />
-                    All
-                </button>
-                {categories.map((cat) => (
-                    <button
-                        key={cat}
-                        onClick={() => setSelectedCategory(cat === selectedCategory ? null : cat)}
-                        className={cn(
-                            "flex items-center gap-2 px-4 py-2 rounded-full border whitespace-nowrap transition-colors",
-                            selectedCategory === cat
-                                ? "bg-primary text-white border-primary"
-                                : "bg-surface text-foreground border-border hover:border-primary/50"
-                        )}
-                    >
-                        {getCategoryIcon(cat)}
-                        {cat}
-                    </button>
-                ))}
+            <div className="text-sm text-muted font-medium uppercase tracking-wider">
+                Select all that apply
             </div>
 
-            {/* Symptoms List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {/* Flat List */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {filteredSymptoms.length > 0 ? (
-                    filteredSymptoms.map((symptom) => (
-                        <button
-                            key={symptom.id}
-                            onClick={() => openSymptomModal(symptom)}
-                            className="text-left group relative flex items-center justify-between p-4 bg-surface rounded-xl border border-border hover:border-primary/50 hover:shadow-sm transition-all duration-200"
-                        >
-                            <div>
-                                <span className="text-xs font-semibold text-primary uppercase tracking-wider mb-1 block">
-                                    {symptom.category}
-                                </span>
-                                <span className="font-medium text-foreground text-lg">
+                    filteredSymptoms.map((symptom) => {
+                        const isSelected = selectedIds.has(symptom.id);
+                        return (
+                            <button
+                                key={symptom.id}
+                                onClick={() => toggleSymptom(symptom.id)}
+                                className={cn(
+                                    "text-left group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200",
+                                    isSelected
+                                        ? "bg-primary/5 border-primary shadow-sm"
+                                        : "bg-surface border-border hover:border-primary/30"
+                                )}
+                            >
+                                <div className={cn(
+                                    "h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors",
+                                    isSelected
+                                        ? "bg-primary border-primary"
+                                        : "border-slate-300 group-hover:border-primary/50"
+                                )}>
+                                    {isSelected && <CheckCircle className="h-4 w-4 text-white" />}
+                                </div>
+                                <span className={cn(
+                                    "font-medium text-lg",
+                                    isSelected ? "text-primary-dark" : "text-foreground"
+                                )}>
                                     {symptom.name}
                                 </span>
-                            </div>
-                            <Plus className="h-5 w-5 text-muted group-hover:text-primary transition-colors" />
-                        </button>
-                    ))
+                            </button>
+                        );
+                    })
                 ) : (
                     <div className="col-span-full py-12 text-center text-muted">
                         <p>No symptoms found matching &quot;{searchQuery}&quot;</p>
@@ -296,106 +281,23 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                 )}
             </div>
 
-            {/* Logged Symptoms Summary */}
-            {loggedSymptoms.length > 0 && (
-                <div className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border p-4 shadow-lg animate-in slide-in-from-bottom-full z-40">
-                    <div className="container mx-auto max-w-4xl">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-semibold text-foreground">
-                                Your Log ({loggedSymptoms.length})
-                            </h3>
-                            <span className="text-xs text-muted">Tap to remove</span>
-                        </div>
-
-                        <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
-                            {loggedSymptoms.map((entry) => (
-                                <button
-                                    key={entry.id}
-                                    onClick={() => removeSymptom(entry.id)}
-                                    className="flex-shrink-0 flex items-center gap-2 pl-3 pr-2 py-1.5 rounded-full bg-background border border-border text-sm"
-                                >
-                                    <span className={cn(
-                                        "w-2 h-2 rounded-full",
-                                        entry.severity === 1 ? "bg-success" :
-                                            entry.severity === 2 ? "bg-warning" :
-                                                entry.severity === 3 ? "bg-alert" : "bg-gray-400"
-                                    )} />
-                                    {entry.name}
-                                    <X className="h-3 w-3 text-muted" />
-                                </button>
-                            ))}
-                        </div>
-
-                        <Button
-                            size="lg"
-                            className="w-full"
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? "Submitting..." : "Submit Daily Log"}
-                        </Button>
-                    </div>
+            {/* Bottom Floating Action Bar */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 z-40 bg-gradient-to-t from-background via-background to-transparent pb-6 pt-12 pointer-events-none">
+                <div className="container mx-auto max-w-4xl pointer-events-auto">
+                    <Button
+                        size="lg"
+                        className={cn(
+                            "w-full shadow-xl transition-all duration-300 transform",
+                            selectedIds.size > 0 ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
+                        )}
+                        onClick={proceedToGrading}
+                    >
+                        Continue to Grading ({selectedIds.size}) <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
                 </div>
-            )}
+            </div>
 
-            {/* Severity Modal */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={activeSymptom?.name}
-            >
-                <div className="space-y-6">
-                    <div className="text-center">
-                        <p className="text-lg font-medium text-foreground mb-4">
-                            How severe is this symptom?
-                        </p>
-
-                        <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                            {severityLevels.map((level) => (
-                                <button
-                                    key={level.value}
-                                    onClick={() => setSeverity(level.value as any)}
-                                    className={cn(
-                                        "relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 h-24 sm:h-32",
-                                        level.color,
-                                        severity === level.value ? level.active : "border-transparent"
-                                    )}
-                                >
-                                    <span className="text-2xl font-bold mb-1">{level.value}</span>
-                                    <span className="font-medium">{level.label}</span>
-                                    {severity === level.value && (
-                                        <div className="absolute top-2 right-2">
-                                            <CheckCircle className="h-5 w-5 fill-current" />
-                                        </div>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="pt-4 flex gap-3">
-                        <Button
-                            variant="outline"
-                            size="lg"
-                            className="flex-1"
-                            onClick={() => setIsModalOpen(false)}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            className="flex-1"
-                            onClick={addSymptom}
-                        >
-                            Add to Log
-                        </Button>
-                    </div>
-                </div>
-            </Modal>
-
-            {/* Bottom spacer for fixed summary */}
-            <div className="h-32" />
+            <div className="h-24" />
         </div>
     );
 }
