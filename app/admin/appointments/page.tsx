@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/Card";
 import { Calendar, Clock, User, FileText, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { type Appointment } from "@/types/database.types";
+import Link from "next/link";
 import { CreateAppointmentDialog } from "@/components/admin/CreateAppointmentDialog";
 
 // Define a type for the joined data
@@ -64,7 +65,7 @@ export default async function AppointmentsPage() {
                                 <th className="px-6 py-4 font-semibold text-gray-700">Type</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Clinician</th>
                                 <th className="px-6 py-4 font-semibold text-gray-700">Status</th>
-                                <th className="px-6 py-4 font-semibold text-gray-700">Notes</th>
+                                <th className="px-6 py-4 font-semibold text-gray-700 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -76,7 +77,7 @@ export default async function AppointmentsPage() {
                                 </tr>
                             ) : (
                                 appointments?.map((apt) => (
-                                    <tr key={apt.id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={apt.id} className="hover:bg-gray-50 transition-colors group">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-2">
                                                 <Calendar className="h-4 w-4 text-gray-400" />
@@ -111,15 +112,13 @@ export default async function AppointmentsPage() {
                                                 {apt.status}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            {apt.notes ? (
-                                                <div className="flex items-start gap-1 text-gray-500 max-w-[200px] truncate" title={apt.notes}>
-                                                    <FileText className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                                                    <span className="truncate">{apt.notes}</span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-gray-300">-</span>
-                                            )}
+                                        <td className="px-6 py-4 text-right">
+                                            <Link
+                                                href={`/admin/appointments/${apt.id}`}
+                                                className="text-primary hover:text-primary-dark font-medium text-sm inline-flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                View Details
+                                            </Link>
                                         </td>
                                     </tr>
                                 ))
