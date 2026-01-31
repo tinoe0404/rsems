@@ -36,7 +36,12 @@ export async function updateSession(request: NextRequest) {
 
     // Public routes that don't require authentication
     const publicRoutes = ['/', '/login', '/signup', '/admin/login', '/terms', '/privacy', '/forgot-password'];
-    const isPublicRoute = publicRoutes.some(route => pathname === route || pathname.startsWith('/api/'));
+    const isPublicRoute = publicRoutes.includes(pathname);
+
+    // Skip API routes and static files early
+    if (pathname.startsWith('/api/') || pathname.startsWith('/_next/')) {
+        return supabaseResponse;
+    }
 
     // Check if this is an admin route
     const isAdminRoute = pathname.startsWith('/admin') && pathname !== '/admin/login';
@@ -59,60 +64,62 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url);
     }
 
-    // User is authenticated - get their role
-    let userRole = 'patient'; // default
-    try {
-        const { data: profileData } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
+    // User is authenticated - only fetch role if accessing protected routes
+    if (isAdminRoute || isPatientRoute || pathname === '/login' || pathname === '/signup' || pathname === '/admin/login') {
+        let userRole = 'patient'; // default
+        try {
+            const { data: profileData } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single();
 
-        if (profileData) {
-            userRole = profileData.role;
+            if (profileData) {
+                userRole = profileData.role;
+            }
+        } catch (error) {
+            console.error('Error fetching user role:', error);
+            // Continue with default role
         }
-    } catch (error) {
-        console.error('Error fetching user role:', error);
-        // Continue with default role
-    }
 
-    // Role-based route protection
-    if (isAdminRoute && userRole !== 'clinician') {
-        // Patient trying to access admin routes - redirect to patient dashboard
-        const url = request.nextUrl.clone();
-        url.pathname = '/dashboard';
-        return NextResponse.redirect(url);
-    }
-
-    if (isPatientRoute && userRole === 'clinician') {
-        // Clinician trying to access patient routes - redirect to admin dashboard
-        const url = request.nextUrl.clone();
-        url.pathname = '/admin/dashboard';
-        return NextResponse.redirect(url);
-    }
-
-    // Handle authenticated users on login/signup pages
-    if (pathname === '/login' || pathname === '/signup') {
-        const url = request.nextUrl.clone();
-        // Redirect based on role
-        if (userRole === 'clinician') {
-            url.pathname = '/admin/dashboard';
-        } else {
+        // Role-based route protection
+        if (isAdminRoute && userRole !== 'clinician') {
+            // Patient trying to access admin routes - redirect to patient dashboard
+            const url = request.nextUrl.clone();
             url.pathname = '/dashboard';
+            return NextResponse.redirect(url);
         }
-        return NextResponse.redirect(url);
-    }
 
-    // Handle authenticated users on admin login page
-    if (pathname === '/admin/login') {
-        const url = request.nextUrl.clone();
-        if (userRole === 'clinician') {
+        if (isPatientRoute && userRole === 'clinician') {
+            // Clinician trying to access patient routes - redirect to admin dashboard
+            const url = request.nextUrl.clone();
             url.pathname = '/admin/dashboard';
-        } else {
-            // Patient on admin login - redirect to patient dashboard
-            url.pathname = '/dashboard';
+            return NextResponse.redirect(url);
         }
-        return NextResponse.redirect(url);
+
+        // Handle authenticated users on login/signup pages
+        if (pathname === '/login' || pathname === '/signup') {
+            const url = request.nextUrl.clone();
+            // Redirect based on role
+            if (userRole === 'clinician') {
+                url.pathname = '/admin/dashboard';
+            } else {
+                url.pathname = '/dashboard';
+            }
+            return NextResponse.redirect(url);
+        }
+
+        // Handle authenticated users on admin login page
+        if (pathname === '/admin/login') {
+            const url = request.nextUrl.clone();
+            if (userRole === 'clinician') {
+                url.pathname = '/admin/dashboard';
+            } else {
+                // Patient on admin login - redirect to patient dashboard
+                url.pathname = '/dashboard';
+            }
+            return NextResponse.redirect(url);
+        }
     }
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're

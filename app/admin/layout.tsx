@@ -22,6 +22,10 @@ export default function AdminLayout({
     // Note: Authorization is now handled by middleware
     // This layout just renders for authenticated clinicians
 
+    // Don't show layout on login page
+    if (pathname === '/admin/login') {
+        return <>{children}</>;
+    }
 
     const navItems = [
         { name: "Triage Board", href: "/admin/dashboard", icon: LayoutDashboard },
