@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/Button";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ interface CreateAppointmentDialogProps {
 }
 
 export function CreateAppointmentDialog({ onAppointmentCreated }: CreateAppointmentDialogProps) {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [patients, setPatients] = useState<Patient[]>([]);
@@ -88,10 +90,10 @@ export function CreateAppointmentDialog({ onAppointmentCreated }: CreateAppointm
             });
 
             setIsOpen(false);
+            router.refresh(); // Refresh Sever Components to show new data
+
             if (onAppointmentCreated) {
                 onAppointmentCreated();
-                // Refresh the page data
-                window.location.reload();
             }
         } catch (error: any) {
             toast.error("Scheduling Failed", {
