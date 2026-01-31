@@ -34,17 +34,42 @@ export async function POST(request: NextRequest) {
 
         // 2. Insert Appointment into Database
         // Using explicit typing or 'any' if schema types are outdated for 'appointments'
-        const { error: dbError } = await (supabase.from("appointments") as any).insert({
-            patient_id: patientId,
-            clinician_id: user.id,
-            scheduled_at: scheduledAt,
-            status: "scheduled",
-            notes: notes,
-        });
 
-        if (dbError) {
-            console.error("Database Error:", dbError);
+        // Create notification for the patient
+        // We need the Appointment ID to link it. Supabase v2 insert().select() returns data.
+        // Let's refactor the insert above slightly to get ID, or we fetch the latest.
+        // Actually, let's just do a fire-and-forget notification if strict linking isn't critical,
+        // but better: update the insert to return data.
+
+        // Refetched strategy:
+        const { data: appointmentData, error: aptError } = await (supabase.from("appointments") as any)
+            .insert({
+                patient_id: patientId,
+                clinician_id: user.id,
+                scheduled_at: scheduledAt,
+                status: "scheduled",
+                notes: notes,
+            })
+            .select()
+            .single();
+
+        if (aptError) {
+            console.error("Database Error:", aptError);
             return NextResponse.json({ error: "Failed to create appointment" }, { status: 500 });
+        }
+
+        const { error: notificationError } = await (supabase.from('notifications') as any)
+            .insert({
+                user_id: patientId,
+                type: 'appointment_new',
+                title: 'New Appointment Scheduled',
+                message: `You have a new appointment scheduled for ${new Date(scheduledAt).toLocaleDateString()}.`,
+                resource_id: appointmentData.id,
+                is_read: false
+            });
+
+        if (notificationError) {
+            console.error('Error creating notification:', notificationError);
         }
 
         // 3. Send Email Notification

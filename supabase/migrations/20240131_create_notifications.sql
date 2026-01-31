@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS public.notifications (
 -- Enable RLS
 ALTER TABLE public.notifications ENABLE ROW LEVEL SECURITY;
 
+-- Enable Realtime
+-- This is CRITICAL for the bell to update instantly
+ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+
 -- Policy: Users can see their own notifications
 CREATE POLICY "Users can view their own notifications"
     ON public.notifications
@@ -26,12 +30,10 @@ CREATE POLICY "Users can update their own notifications"
     USING (auth.uid() = user_id);
 
 -- Policy: Admins/Service Role can insert notifications
--- Assuming logic is handled via server-side API with service role, but allowing authenticated users for now if needed.
--- Ideally, only system creates notifications.
 CREATE POLICY "System can insert notifications"
     ON public.notifications
     FOR INSERT
-    WITH CHECK (true); -- Usually restricted, but for simplicity in this setup
+    WITH CHECK (true);
 
 -- Grant permissions
 GRANT ALL ON public.notifications TO authenticated;
