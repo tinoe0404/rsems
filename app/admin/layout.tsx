@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "@/components/admin/MobileMenu";
+import { LogoutButton } from "@/components/admin/LogoutButton";
 
 export default function AdminLayout({
     children,
@@ -72,13 +73,7 @@ export default function AdminLayout({
                 </nav>
 
                 <div className="p-4 border-t border-white/10">
-                    <Link
-                        href="/dashboard"
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-colors"
-                    >
-                        <LogOut className="h-5 w-5" />
-                        Exit to App
-                    </Link>
+                    <LogoutButton label="Exit to App" />
                 </div>
             </aside>
 
