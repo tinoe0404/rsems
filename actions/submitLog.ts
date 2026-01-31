@@ -39,17 +39,17 @@ export async function submitDailyLog(
         // 3. Determine if Action is Required (Red/3 = Critical)
         const requiresAction = calculatedRiskScore === 3;
 
-        // 4. Insert into Database
+        // 4. Insert or Update into Database (Upsert)
         // We cast the insert object to any if needed to bypass strict typing issues,
         // but ideally we utilize the types we have.
-        const { error } = await (supabase.from("daily_logs") as any).insert({
+        const { error } = await (supabase.from("daily_logs") as any).upsert({
             user_id: user.id,
             log_date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
             symptoms_entry: selectedSymptoms,
             calculated_risk_score: calculatedRiskScore,
             requires_action: requiresAction,
             additional_notes: additionalNotes || null,
-        });
+        }, { onConflict: 'user_id, log_date' });
 
         if (error) {
             console.error("Database Error:", error);
