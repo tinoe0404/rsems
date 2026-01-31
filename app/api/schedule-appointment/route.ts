@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
         const { error: dbError } = await (supabase.from("appointments") as any).insert({
             patient_id: patientId,
             clinician_id: user.id,
-            appointment_date: scheduledAt, // Ensure col name matches schema. In task 1 schema was 'appointments' with 'appointment_date'
+            scheduled_at: scheduledAt,
             status: "scheduled",
             notes: notes,
         });

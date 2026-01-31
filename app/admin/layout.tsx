@@ -11,6 +11,7 @@ import {
     ShieldAlert
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MobileMenu } from "@/components/admin/MobileMenu";
 
 export default function AdminLayout({
     children,
@@ -81,13 +82,11 @@ export default function AdminLayout({
                 </div>
             </aside>
 
-            {/* Mobile Header (placeholder) */}
-            <div className="md:hidden fixed top-0 w-full bg-[#00695C] text-white p-4 z-50">
-                <span className="font-bold">RSEMS Clinician</span>
-            </div>
+            {/* Mobile Header & Menu */}
+            <MobileMenu navItems={navItems} />
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 p-8 pt-20 md:pt-8 bg-gray-50 min-h-screen">
+            <main className="flex-1 md:ml-64 p-4 md:p-8 bg-gray-50 min-h-screen">
                 {children}
             </main>
         </div>
