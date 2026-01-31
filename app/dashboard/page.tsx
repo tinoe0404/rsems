@@ -5,6 +5,7 @@ import { type Profile } from "@/types/database.types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Heart, LogOut, Calendar, FileText, User } from "lucide-react";
+import { PatientAppointments } from "@/components/dashboard/PatientAppointments";
 
 export default async function DashboardPage() {
     const supabase = await createClient();
@@ -120,7 +121,7 @@ export default async function DashboardPage() {
 
                 {/* Quick Actions Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <Card hover padding="lg" className="text-center">
+                    <Card hover padding="lg" className="text-center md:col-span-1">
                         <div className="inline-flex items-center justify-center rounded-full bg-primary/10 p-4 mb-4">
                             <FileText className="h-8 w-8 text-primary" />
                         </div>
@@ -137,19 +138,23 @@ export default async function DashboardPage() {
                         </Link>
                     </Card>
 
-                    <Card hover padding="lg" className="text-center">
-                        <div className="inline-flex items-center justify-center rounded-full bg-info/10 p-4 mb-4">
-                            <Calendar className="h-8 w-8 text-info" />
+                    <Card hover padding="lg" className="md:col-span-2">
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-2">
+                                <div className="inline-flex items-center justify-center rounded-full bg-info/10 p-2">
+                                    <Calendar className="h-5 w-5 text-info" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-foreground">
+                                    Upcoming Appointments
+                                </h3>
+                            </div>
+                            <Link href="/dashboard/appointments">
+                                <Button variant="ghost" size="sm" className="text-primary hover:text-primary-dark">
+                                    View All
+                                </Button>
+                            </Link>
                         </div>
-                        <h3 className="text-lg font-semibold text-foreground mb-2">
-                            Appointments
-                        </h3>
-                        <p className="text-sm text-muted mb-4">
-                            View and manage your appointments
-                        </p>
-                        <Button variant="outline" size="md" className="w-full" disabled>
-                            Coming Soon
-                        </Button>
+                        <PatientAppointments />
                     </Card>
 
                     <Card hover padding="lg" className="text-center">
