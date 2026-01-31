@@ -181,8 +181,47 @@ export interface AppointmentUpdate {
 }
 
 // =====================================================
+export interface Notification {
+    id: string;
+    user_id: string;
+    type: string; // 'appointment_new'
+    title: string;
+    message: string;
+    resource_id: string | null;
+    is_read: boolean;
+    created_at: string;
+}
+
+export interface NotificationInsert {
+    user_id: string;
+    type: string;
+    title: string;
+    message: string;
+    resource_id?: string | null;
+    is_read?: boolean;
+}
+
+export interface NotificationUpdate {
+    is_read?: boolean;
+}
+
+// =====================================================
 // DATABASE VIEWS
 // =====================================================
+
+/**
+ * Notification
+ */
+export interface Notification {
+    id: string;
+    user_id: string;
+    type: string;
+    title: string;
+    message: string;
+    resource_id: string | null;
+    is_read: boolean;
+    created_at: string;
+}
 
 /**
  * High Risk Patients View
@@ -393,6 +432,11 @@ export interface Database {
                 Row: Appointment;
                 Insert: AppointmentInsert;
                 Update: AppointmentUpdate;
+            };
+            notifications: {
+                Row: Notification;
+                Insert: NotificationInsert;
+                Update: NotificationUpdate;
             };
         };
         Views: {

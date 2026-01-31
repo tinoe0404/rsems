@@ -19,6 +19,7 @@ import Link from "next/link";
 import { format } from "date-fns";
 import { PatientAppointments } from "@/components/dashboard/PatientAppointments";
 import { motion } from "framer-motion";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 
 interface DashboardClientProps {
     profile: Profile;
@@ -59,10 +60,7 @@ export function DashboardClient({ profile, email, daysSinceTreatment }: Dashboar
                         <span className="font-bold text-slate-800 text-lg tracking-tight">RSEMS</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button className="relative p-2 text-slate-400 hover:text-teal-600 transition-colors rounded-full hover:bg-teal-50">
-                            <Bell className="h-5 w-5" />
-                            <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full border-2 border-white"></span>
-                        </button>
+                        <NotificationBell />
                         <Link href="/dashboard/profile">
                             <div className="h-9 w-9 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-medium shadow-md shadow-teal-500/20 ring-2 ring-white cursor-pointer hover:scale-105 transition-transform">
                                 {profile.full_name[0]}
