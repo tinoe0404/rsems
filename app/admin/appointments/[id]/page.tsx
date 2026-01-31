@@ -7,7 +7,8 @@ import { format } from "date-fns";
 import Link from "next/link";
 import { type Appointment } from "@/types/database.types";
 
-export default async function AppointmentDetailsPage({ params }: { params: { id: string } }) {
+export default async function AppointmentDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
     const supabase = await createClient();
 
     // Fetch appointment with full details
@@ -19,7 +20,7 @@ export default async function AppointmentDetailsPage({ params }: { params: { id:
             clinician:profiles!clinician_id(*),
             created_by_user:profiles!created_by(full_name)
         `)
-        .eq('id', params.id)
+        .eq('id', id)
         .single();
 
     if (error || !appointmentData) {
