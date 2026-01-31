@@ -49,9 +49,10 @@ export default function ProfilePage() {
             console.error("Error fetching profile:", error);
             toast.error("Failed to load profile");
         } else if (data) {
-            setProfile(data);
-            setPhoneNumber(data.phone_number || "");
-            setCancerType(data.cancer_type || "");
+            const userProfile = data as Profile;
+            setProfile(userProfile);
+            setPhoneNumber(userProfile.phone_number || "");
+            setCancerType(userProfile.cancer_type || "");
         }
 
         setIsLoading(false);
@@ -67,6 +68,7 @@ export default function ProfilePage() {
         try {
             const { error } = await supabase
                 .from('profiles')
+                // @ts-ignore
                 .update({
                     phone_number: phoneNumber,
                     cancer_type: cancerType
