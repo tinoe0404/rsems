@@ -54,7 +54,9 @@ export default function LoginPage() {
 
                 const profile = profileData as Profile | null;
 
-                if (!profile?.treatment_start_date) {
+                if (profile?.role === "clinician") {
+                    router.push("/admin/dashboard");
+                } else if (!profile?.treatment_start_date) {
                     router.push("/onboarding");
                 } else {
                     router.push("/dashboard");
