@@ -49,7 +49,7 @@ export function DashboardClient({ profile, email, daysSinceTreatment }: Dashboar
     };
 
     return (
-        <div className="min-h-screen bg-slate-50/50">
+        <div className="min-h-screen bg-background">
             {/* Top Navigation Bar */}
             <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/50">
                 <div className="container mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">

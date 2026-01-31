@@ -6,20 +6,21 @@
   --primary: #00897B;
   --primary-dark: #00695C;
   --primary-light: #4DB6AC;
-  
-  /* Neutral Colors - Eye-Strain Optimized */
-  --background: #F8FAFC;
+
+  /* Neutral Colors - Eye-Strain Optimized stuck with Teal Tint */
+  --background: #EAF8F9;
+  /* More visible faint teal */
   --surface: #FFFFFF;
   --foreground: #1E293B;
   --muted: #64748B;
   --border: #E2E8F0;
-  
+
   /* Semantic Colors - Medical Context */
   --alert: #EF4444;
   --warning: #F59E0B;
   --success: #10B981;
   --info: #3B82F6;
-  
+
   /* Shadows for depth */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
@@ -40,10 +41,10 @@
   --color-warning: var(--warning);
   --color-success: var(--success);
   --color-info: var(--info);
-  
+
   /* Typography */
   --font-sans: var(--font-inter);
-  
+
   /* Spacing for touch-friendly UI */
   --spacing-touch: 44px;
 }

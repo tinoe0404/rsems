@@ -81,7 +81,7 @@ export default function AdminLayout({
             <MobileMenu navItems={navItems} />
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 p-4 md:p-8 bg-gray-50 min-h-screen">
+            <main className="flex-1 md:ml-64 p-4 md:p-8 bg-background min-h-screen">
                 {children}
             </main>
         </div>
