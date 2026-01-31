@@ -167,79 +167,15 @@ export default async function DashboardPage() {
                         <p className="text-sm text-muted mb-4">
                             Update your personal information
                         </p>
-                        <Button variant="outline" size="md" className="w-full" disabled>
-                            Coming Soon
-                        </Button>
+                        <Link href="/dashboard/profile" className="w-full">
+                            <Button variant="outline" size="md" className="w-full">
+                                Manage Profile
+                            </Button>
+                        </Link>
                     </Card>
                 </div>
 
-                {/* Info Section */}
-                <Card padding="lg">
-                    <div className="rounded-lg bg-primary/10 border border-primary/20 p-6">
-                        <h3 className="text-lg font-semibold text-foreground mb-2">
-                            🎉 Authentication System Complete!
-                        </h3>
-                        <p className="text-muted mb-4">
-                            Your RSEMS account is now fully set up and secured. The
-                            authentication and onboarding flow is working perfectly!
-                        </p>
-                        <div className="space-y-2 text-sm text-muted">
-                            <p>✅ Secure login and registration</p>
-                            <p>✅ Profile creation and management</p>
-                            <p>✅ Protected routes with middleware</p>
-                            <p>✅ Supabase authentication integrated</p>
-                        </div>
-                        <div className="mt-4 pt-4 border-t border-primary/20">
-                            <p className="text-sm font-medium text-foreground">
-                                Next Phase: Symptom Logging
-                            </p>
-                            <p className="text-sm text-muted mt-1">
-                                We&apos;ll build the symptom tracking feature where you can log
-                                your daily side effects and risk scores will be automatically
-                                calculated.
-                            </p>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Profile Details */}
-                <Card padding="lg" className="mt-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">
-                        Your Profile
-                    </h3>
-                    <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <dt className="text-muted font-medium">Full Name</dt>
-                            <dd className="text-foreground mt-1">{profile.full_name}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-muted font-medium">Email</dt>
-                            <dd className="text-foreground mt-1">{user.email}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-muted font-medium">Cancer Type</dt>
-                            <dd className="text-foreground mt-1">{profile.cancer_type}</dd>
-                        </div>
-                        <div>
-                            <dt className="text-muted font-medium">Phone Number</dt>
-                            <dd className="text-foreground mt-1">
-                                {profile.phone_number || "Not provided"}
-                            </dd>
-                        </div>
-                        <div>
-                            <dt className="text-muted font-medium">Role</dt>
-                            <dd className="text-foreground mt-1 capitalize">
-                                {profile.role}
-                            </dd>
-                        </div>
-                        <div>
-                            <dt className="text-muted font-medium">Account Created</dt>
-                            <dd className="text-foreground mt-1">
-                                {new Date(profile.created_at).toLocaleDateString()}
-                            </dd>
-                        </div>
-                    </dl>
-                </Card>
+                {/* Content Removed: Info Section and Profile Details are now managed elsewhere or not needed */}
             </main>
 
             {/* Footer */}
