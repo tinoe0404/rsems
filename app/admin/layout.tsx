@@ -1,9 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import {
     LayoutDashboard,
     Users,
@@ -13,7 +11,6 @@ import {
     ShieldAlert
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 
 export default function AdminLayout({
     children,
@@ -21,54 +18,10 @@ export default function AdminLayout({
     children: React.ReactNode;
 }) {
     const pathname = usePathname();
-    const router = useRouter();
-    const [isAuthorized, setIsAuthorized] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
 
-    useEffect(() => {
-        async function checkAuth() {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
+    // Note: Authorization is now handled by middleware
+    // This layout just renders for authenticated clinicians
 
-            if (!user) {
-                router.push("/login");
-                return;
-            }
-
-            const { data: profile } = await supabase
-                .from("profiles")
-                .select("role")
-                .eq("id", user.id)
-                .single() as any; // Cast to avoid inference issues
-
-            // Explicitly check for clinician role
-            // In a real app, we'd use 'clinician' but for now we might be testing with 'patient'
-            // To strictly follow requirements:
-            if (profile?.role !== "clinician") {
-                // Optionally redirect or show unauthorized
-                // For development/MVP if you created a patient user, you might want to allow it temporarily
-                // But the requirement says "Ensure this page is only accessible to users with role: 'clinician'"
-                // We will enforce it strictly.
-                router.push("/dashboard"); // Redirect patients away
-                return;
-            }
-
-            setIsAuthorized(true);
-            setIsLoading(false);
-        }
-
-        checkAuth();
-    }, [router]);
-
-    if (isLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-        );
-    }
-
-    if (!isAuthorized) return null;
 
     const navItems = [
         { name: "Triage Board", href: "/admin/dashboard", icon: LayoutDashboard },

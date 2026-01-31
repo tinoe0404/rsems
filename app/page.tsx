@@ -51,7 +51,7 @@ export default function Home() {
               size="lg"
               variant="outline"
               className="w-full sm:w-auto"
-              onClick={() => router.push("/login")}
+              onClick={() => router.push("/admin/login")}
             >
               <Shield className="mr-2 h-5 w-5" />
               Clinician Login

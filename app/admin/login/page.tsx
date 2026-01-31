@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AuthError } from "@/components/auth/AuthError";
 import { LoadingSpinner } from "@/components/auth/LoadingSpinner";
-import { Heart, Mail, Lock } from "lucide-react";
+import { ShieldAlert, Users } from "lucide-react";
 
-export default function LoginPage() {
+export default function ClinicianLoginPage() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -45,7 +45,7 @@ export default function LoginPage() {
             }
 
             if (data.user) {
-                // Check if user has completed onboarding
+                // Check user role
                 const { data: profileData } = await supabase
                     .from("profiles")
                     .select("*")
@@ -55,21 +55,15 @@ export default function LoginPage() {
                 const profile = profileData as Profile | null;
 
                 if (profile?.role === "clinician") {
-                    // Clinician trying to login on patient portal
-                    setError("Please use the Clinician Portal to login. You'll be redirected...");
-                    setIsLoading(false);
-                    // Sign them out and redirect to clinician login
-                    await supabase.auth.signOut();
-                    setTimeout(() => {
-                        router.push("/admin/login");
-                    }, 2000);
-                    return;
-                } else if (!profile?.treatment_start_date) {
-                    router.push("/onboarding");
+                    router.push("/admin/dashboard");
                     router.refresh();
                 } else {
-                    router.push("/dashboard");
-                    router.refresh();
+                    // Patient trying to login to clinician portal
+                    setError("This portal is for clinicians only. Please use the patient login page.");
+                    // Sign them out since they're in the wrong portal
+                    await supabase.auth.signOut();
+                    setIsLoading(false);
+                    return;
                 }
             }
         } catch (err) {
@@ -83,14 +77,14 @@ export default function LoginPage() {
             <div className="w-full max-w-md">
                 {/* Logo/Brand */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center rounded-full bg-primary/10 p-3 mb-4">
-                        <Heart className="h-8 w-8 text-primary" strokeWidth={2} />
+                    <div className="inline-flex items-center justify-center rounded-full bg-[#00695C]/10 p-3 mb-4">
+                        <ShieldAlert className="h-8 w-8 text-[#00695C]" strokeWidth={2} />
                     </div>
                     <h1 className="text-3xl font-bold text-foreground">
-                        Welcome Back
+                        Clinician Portal
                     </h1>
                     <p className="text-muted mt-2">
-                        Sign in to continue your treatment journey
+                        Sign in to access patient records and triage
                     </p>
                 </div>
 
@@ -105,7 +99,7 @@ export default function LoginPage() {
                             id="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            placeholder="you@example.com"
+                            placeholder="clinician@rsems.health"
                             required
                             disabled={isLoading}
                             autoComplete="email"
@@ -133,7 +127,7 @@ export default function LoginPage() {
                             </label>
                             <Link
                                 href="/forgot-password"
-                                className="text-primary hover:text-primary-dark font-medium transition-colors"
+                                className="text-[#00695C] hover:text-[#004d40] font-medium transition-colors"
                             >
                                 Forgot password?
                             </Link>
@@ -143,7 +137,7 @@ export default function LoginPage() {
                             type="submit"
                             variant="primary"
                             size="lg"
-                            className="w-full"
+                            className="w-full bg-[#00695C] hover:bg-[#004d40]"
                             disabled={isLoading}
                         >
                             {isLoading ? (
@@ -158,19 +152,8 @@ export default function LoginPage() {
                     </form>
                 </Card>
 
-                {/* Sign up link */}
-                <p className="text-center mt-6 text-muted">
-                    Don&apos;t have an account?{" "}
-                    <Link
-                        href="/signup"
-                        className="text-primary hover:text-primary-dark font-medium transition-colors"
-                    >
-                        Sign up
-                    </Link>
-                </p>
-
                 {/* Back to home */}
-                <div className="text-center mt-4">
+                <div className="text-center mt-6">
                     <Link
                         href="/"
                         className="text-sm text-muted hover:text-foreground transition-colors"

@@ -70,8 +70,9 @@ export default function SignupPage() {
                 options: {
                     data: {
                         full_name: fullName,
-                        role: "patient",
+                        role: "patient", // Explicitly set to patient - clinicians are created manually
                     },
+                    emailRedirectTo: `${window.location.origin}/onboarding`,
                 },
             });
 
