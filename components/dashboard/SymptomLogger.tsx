@@ -9,9 +9,8 @@ import {
     AlertCircle,
     CheckCircle,
     AlertTriangle,
-    Info,
     ArrowRight,
-    ArrowLeft
+    Send
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { submitDailyLog, type LogSubmissionResult } from "@/actions/submitLog";
@@ -20,7 +19,7 @@ interface SymptomLoggerProps {
     symptoms: SymptomMaster[];
 }
 
-type Step = 'select' | 'grade' | 'success';
+type Step = 'select' | 'success';
 
 export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
     const [step, setStep] = useState<Step>('select');
@@ -29,13 +28,10 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
     // Selection State
     const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
-    // Grading State
-    const [grades, setGrades] = useState<Record<number, 0 | 1 | 2 | 3>>({});
-
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionResult, setSubmissionResult] = useState<LogSubmissionResult | null>(null);
 
-    // Filter symptoms (just search, no categories)
+    // Filter symptoms
     const filteredSymptoms = useMemo(() => {
         if (!searchQuery) return symptoms;
         const query = searchQuery.toLowerCase();
@@ -55,34 +51,15 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
         setSelectedIds(next);
     };
 
-    const handleGradeChange = (id: number, severity: 0 | 1 | 2 | 3) => {
-        setGrades(prev => ({ ...prev, [id]: severity }));
-    };
-
-    const proceedToGrading = () => {
+    const handleSubmit = async () => {
         if (selectedIds.size === 0) return;
 
-        // Initialize grades for selected items if not present
-        const initialGrades = { ...grades };
-        selectedIds.forEach(id => {
-            if (initialGrades[id] === undefined) {
-                // Find default severity or set to 1 (Mild) as reasonable default for reported symptom
-                const s = symptoms.find(sym => sym.id === id);
-                initialGrades[id] = s?.default_severity || 1;
-            }
-        });
-        setGrades(initialGrades);
-        setStep('grade');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
-
-    const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
+            // Map selected IDs to the input format expected by server action
             const payload = Array.from(selectedIds).map(id => ({
-                symptom_id: id,
-                symptom_name: symptoms.find(s => s.id === id)?.name || "Unknown",
-                severity: grades[id] || 1
+                symptomId: id,
+                // notes could be added here if UI supports it
             }));
 
             const result = await submitDailyLog(payload);
@@ -101,12 +78,6 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
             setIsSubmitting(false);
         }
     };
-
-    const severityLevels = [
-        { value: 1, label: "Mild", color: "bg-success/10 border-success/30 text-success-dark", ring: "ring-success" },
-        { value: 2, label: "Moderate", color: "bg-warning/10 border-warning/30 text-warning-dark", ring: "ring-warning" },
-        { value: 3, label: "Severe", color: "bg-alert/10 border-alert/30 text-alert-dark", ring: "ring-alert" },
-    ] as const;
 
     const getSeverityColor = (score: number) => {
         if (score >= 3) return "bg-alert/10 text-alert border-alert";
@@ -149,7 +120,6 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                         onClick={() => {
                             setStep('select');
                             setSelectedIds(new Set());
-                            setGrades({});
                             setSubmissionResult(null);
                         }}
                         className="w-full sm:w-auto"
@@ -157,67 +127,6 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                         Back to Dashboard
                     </Button>
                 </Card>
-            </div>
-        );
-    }
-
-    if (step === 'grade') {
-        const selectedSymptoms = symptoms.filter(s => selectedIds.has(s.id));
-        return (
-            <div className="space-y-8 animate-in slide-in-from-right-8 duration-300">
-                <div>
-                    <h2 className="text-2xl font-bold text-foreground mb-2">Grade Severity</h2>
-                    <p className="text-muted">For each symptom, how severe is it right now?</p>
-                </div>
-
-                <div className="space-y-6">
-                    {selectedSymptoms.map(symptom => (
-                        <div key={symptom.id} className="bg-white rounded-xl p-6 shadow-sm border border-slate-100">
-                            <h3 className="text-lg font-semibold text-slate-800 mb-4">{symptom.name}</h3>
-                            <div className="grid grid-cols-3 gap-3">
-                                {severityLevels.map((level) => {
-                                    const isSelected = grades[symptom.id] === level.value;
-                                    return (
-                                        <button
-                                            key={level.value}
-                                            onClick={() => handleGradeChange(symptom.id, level.value as any)}
-                                            className={cn(
-                                                "flex flex-col items-center justify-center p-3 rounded-lg border transition-all duration-200",
-                                                isSelected
-                                                    ? `ring-2 ${level.ring} ${level.color} bg-opacity-100 font-bold shadow-sm`
-                                                    : "bg-slate-50 border-slate-100 text-slate-500 hover:bg-slate-100"
-                                            )}
-                                        >
-                                            <span className="text-lg mb-1">{level.value}</span>
-                                            <span className="text-xs uppercase tracking-wide">{level.label}</span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                <div className="flex gap-4 pt-4 sticky bottom-6 z-20">
-                    <Button
-                        variant="outline"
-                        size="lg"
-                        className="flex-1 bg-white shadow-lg"
-                        onClick={() => setStep('select')}
-                    >
-                        <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                    </Button>
-                    <Button
-                        variant="primary"
-                        size="lg"
-                        className="flex-1 shadow-lg shadow-primary/20"
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? "Submitting..." : "Submit Log"}
-                    </Button>
-                </div>
-                <div className="h-12" />
             </div>
         );
     }
@@ -230,15 +139,22 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted" />
                 <input
                     type="text"
-                    placeholder="Search symptoms..."
+                    placeholder="Search symptoms (e.g. Mild Nausea, Severe Pain)..."
                     className="w-full h-12 pl-10 pr-4 rounded-xl border border-border bg-surface text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-lg shadow-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
 
-            <div className="text-sm text-muted font-medium uppercase tracking-wider">
-                Select all that apply
+            <div className="flex items-center justify-between">
+                <div className="text-sm text-muted font-medium uppercase tracking-wider">
+                    Select all that apply
+                </div>
+                {selectedIds.size > 0 && (
+                    <div className="text-sm font-bold text-primary">
+                        {selectedIds.size} selected
+                    </div>
+                )}
             </div>
 
             {/* Flat List */}
@@ -253,12 +169,12 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                                 className={cn(
                                     "text-left group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200",
                                     isSelected
-                                        ? "bg-primary/5 border-primary shadow-sm"
-                                        : "bg-surface border-border hover:border-primary/30"
+                                        ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary"
+                                        : "bg-surface border-border hover:border-primary/30 hover:bg-slate-50"
                                 )}
                             >
                                 <div className={cn(
-                                    "h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors",
+                                    "h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0",
                                     isSelected
                                         ? "bg-primary border-primary"
                                         : "border-slate-300 group-hover:border-primary/50"
@@ -266,7 +182,7 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                                     {isSelected && <CheckCircle className="h-4 w-4 text-white" />}
                                 </div>
                                 <span className={cn(
-                                    "font-medium text-lg",
+                                    "font-medium text-lg leading-snug",
                                     isSelected ? "text-primary-dark" : "text-foreground"
                                 )}>
                                     {symptom.name}
@@ -287,12 +203,19 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                     <Button
                         size="lg"
                         className={cn(
-                            "w-full shadow-xl transition-all duration-300 transform",
+                            "w-full shadow-xl transition-all duration-300 transform font-bold text-lg h-14",
                             selectedIds.size > 0 ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
                         )}
-                        onClick={proceedToGrading}
+                        onClick={handleSubmit}
+                        disabled={isSubmitting}
                     >
-                        Continue to Grading ({selectedIds.size}) <ArrowRight className="ml-2 h-4 w-4" />
+                        {isSubmitting ? (
+                            "Submitting..."
+                        ) : (
+                            <>
+                                Submit Log <Send className="ml-2 h-5 w-5" />
+                            </>
+                        )}
                     </Button>
                 </div>
             </div>

@@ -11,8 +11,13 @@ export interface LogSubmissionResult {
     error?: string;
 }
 
+export interface LogSubmissionInput {
+    symptomId: number;
+    notes?: string;
+}
+
 export async function submitDailyLog(
-    selectedSymptoms: SymptomEntry[],
+    selectedSymptoms: LogSubmissionInput[],
     additionalNotes?: string
 ): Promise<LogSubmissionResult> {
     const supabase = await createClient();
@@ -31,20 +36,43 @@ export async function submitDailyLog(
             return { success: false, error: "No symptoms selected" };
         }
 
-        // 2. Triage Logic: Calculate Risk Score
+        // 2. Fetch Symptom Details & Severities from DB
+        const symptomIds = selectedSymptoms.map(s => s.symptomId);
+        const { data: symptomDetails, error: symptomError } = await supabase
+            .from("symptoms_master")
+            .select("id, name, default_severity")
+            .in("id", symptomIds);
+
+        if (symptomError || !symptomDetails) {
+            console.error("Error fetching symptoms:", symptomError);
+            return { success: false, error: "Failed to validate symptoms" };
+        }
+
+        // Map input to full entries
+        const symptomsEntry: SymptomEntry[] = selectedSymptoms.map(input => {
+            // Explicitly cast or rely on Supabase types if they were working, but here we cast for safety
+            const detail = (symptomDetails as any[]).find((d: any) => d.id === input.symptomId);
+            return {
+                symptom_id: input.symptomId,
+                symptom_name: detail?.name || "Unknown Symptom",
+                severity: detail?.default_severity || 1, // Default to 1 if not found (fallback)
+                notes: input.notes
+            };
+        });
+
+        // 3. Triage Logic: Calculate Risk Score
         // The score is the MAXIMUM severity found in the symptoms.
-        // 0 = None, 1 = Mild, 2 = Moderate, 3 = Severe
-        const severities = selectedSymptoms.map((s) => s.severity);
+        const severities = symptomsEntry.map((s) => s.severity);
         const calculatedRiskScore = Math.max(...severities);
 
-        // 3. Determine if Action is Required (Red/3 = Critical)
+        // 4. Determine if Action is Required (Red/3 = Critical)
         const requiresAction = calculatedRiskScore === 3;
 
-        // 4. Insert or Update into Database (Upsert)
+        // 5. Insert or Update into Database (Upsert)
         const { error } = await (supabase.from("daily_logs") as any).upsert({
             user_id: user.id,
             log_date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
-            symptoms_entry: selectedSymptoms,
+            symptoms_entry: symptomsEntry,
             calculated_risk_score: calculatedRiskScore,
             requires_action: requiresAction,
             additional_notes: additionalNotes || null,
@@ -55,7 +83,7 @@ export async function submitDailyLog(
             return { success: false, error: "Failed to save log" };
         }
 
-        // 5. Notify clinicians if critical symptoms detected
+        // 6. Notify clinicians if critical symptoms detected
         if (requiresAction) {
             console.log('[DEBUG] Critical symptom detected, notifying clinicians...');
             try {
@@ -103,7 +131,7 @@ export async function submitDailyLog(
         }
 
 
-        // 6. Return success and triage result
+        // 7. Return success and triage result
         return {
             success: true,
             score: calculatedRiskScore,
