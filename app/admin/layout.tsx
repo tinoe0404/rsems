@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "@/components/admin/MobileMenu";
 import { LogoutButton } from "@/components/admin/LogoutButton";
+import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
 
 export default function AdminLayout({
     children,
@@ -72,7 +73,11 @@ export default function AdminLayout({
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-white/10">
+                <div className="p-4 border-t border-white/10 space-y-2">
+                    <div className="flex items-center justify-between px-4 py-2">
+                        <span className="text-xs text-white/50 uppercase tracking-wider">Alerts</span>
+                        <AdminNotificationBell />
+                    </div>
                     <LogoutButton label="Exit to App" />
                 </div>
             </aside>

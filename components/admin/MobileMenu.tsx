@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, ShieldAlert, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
+import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
 
 interface NavItem {
     name: string;
@@ -31,14 +32,17 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                     <ShieldAlert className="h-6 w-6" />
                     <span className="font-bold text-lg">RSEMS Clinician</span>
                 </div>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleMenu}
-                    className="text-white hover:bg-white/10 px-2"
-                >
-                    {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-                </Button>
+                <div className="flex items-center gap-3">
+                    <AdminNotificationBell />
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={toggleMenu}
+                        className="text-white hover:bg-white/10 px-2"
+                    >
+                        {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+                    </Button>
+                </div>
             </div>
 
             {/* Overlay */}

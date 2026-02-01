@@ -1,7 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { type SymptomEntry } from "@/types/database.types";
+import { type SymptomEntry, type Profile } from "@/types/database.types";
+import { createBulkNotifications } from "./createNotification";
 
 export interface LogSubmissionResult {
     success: boolean;
@@ -40,8 +41,6 @@ export async function submitDailyLog(
         const requiresAction = calculatedRiskScore === 3;
 
         // 4. Insert or Update into Database (Upsert)
-        // We cast the insert object to any if needed to bypass strict typing issues,
-        // but ideally we utilize the types we have.
         const { error } = await (supabase.from("daily_logs") as any).upsert({
             user_id: user.id,
             log_date: new Date().toISOString().split("T")[0], // YYYY-MM-DD
@@ -56,7 +55,45 @@ export async function submitDailyLog(
             return { success: false, error: "Failed to save log" };
         }
 
-        // 5. Return success and triage result
+        // 5. Notify clinicians if critical symptoms detected
+        if (requiresAction) {
+            try {
+                // Get patient name for notification
+                const { data: profileData } = await supabase
+                    .from('profiles')
+                    .select('full_name')
+                    .eq('id', user.id)
+                    .single();
+
+                const patientName = (profileData as Profile | null)?.full_name || "A patient";
+
+                // Get all clinicians
+                const { data: clinicians } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('role', 'clinician');
+
+                if (clinicians && clinicians.length > 0) {
+                    // Create notifications for all clinicians
+                    const notifications = (clinicians as { id: string }[]).map(clinician => ({
+                        userId: clinician.id,
+                        type: 'critical_symptom_alert',
+                        title: '🚨 Critical Symptom Alert',
+                        message: `${patientName} logged severe symptoms (Risk Score: 3). Immediate review recommended.`,
+                        resourceId: user.id, // Link to patient for drill-down
+                    }));
+
+                    await createBulkNotifications(notifications);
+                } else {
+                    console.warn('No clinicians found to notify for critical symptom');
+                }
+            } catch (notificationError) {
+                // Log error but don't fail the submission
+                console.error('Failed to create clinician notifications:', notificationError);
+            }
+        }
+
+        // 6. Return success and triage result
         return {
             success: true,
             score: calculatedRiskScore,
