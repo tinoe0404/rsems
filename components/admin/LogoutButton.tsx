@@ -39,8 +39,9 @@ export function LogoutButton({ className, variant = "sidebar", label = "Log Out"
             <button
                 onClick={handleLogout}
                 disabled={isLoading}
+                aria-label={isLoading ? "Logging out" : "Log out and exit admin portal"}
                 className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-colors text-left",
+                    "w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-colors text-left min-h-[44px]",
                     isLoading && "opacity-50 cursor-wait",
                     className
                 )}
@@ -55,7 +56,8 @@ export function LogoutButton({ className, variant = "sidebar", label = "Log Out"
         <button
             onClick={handleLogout}
             disabled={isLoading}
-            className={cn("flex items-center gap-2 text-red-600 font-medium", className)}
+            aria-label={isLoading ? "Logging out" : "Log out and exit admin portal"}
+            className={cn("flex items-center gap-2 text-red-600 font-medium min-h-[44px]", className)}
         >
             <LogOut className="h-4 w-4" />
             {label}

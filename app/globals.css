@@ -66,8 +66,43 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Focus styles for accessibility */
+/* Focus styles for accessibility - Enhanced */
+*:focus {
+  outline: none;
+  /* Remove default */
+}
+
 *:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Specific focus styles for buttons and interactive elements */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 137, 123, 0.1);
+}
+
+/* High contrast focus for critical actions */
+button[aria-label*="Log out"]:focus-visible,
+button[aria-label*="Delete"]:focus-visible {
+  outline-color: var(--alert);
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

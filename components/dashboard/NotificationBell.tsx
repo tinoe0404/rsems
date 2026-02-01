@@ -19,6 +19,14 @@ export function NotificationBell() {
     useEffect(() => {
         fetchNotifications();
 
+        // Keyboard navigation - close on Escape
+        function handleEscapeKey(event: KeyboardEvent) {
+            if (event.key === 'Escape') {
+                setIsOpen(false);
+            }
+        }
+        document.addEventListener("keydown", handleEscapeKey);
+
         // Subscribe to new notifications
         const channel = supabase
             .channel('notifications_update')
@@ -42,6 +50,7 @@ export function NotificationBell() {
             .subscribe();
 
         return () => {
+            document.removeEventListener("keydown", handleEscapeKey);
             supabase.removeChannel(channel);
         };
     }, []);
@@ -101,8 +110,11 @@ export function NotificationBell() {
         <div className="relative">
             <button
                 onClick={() => setIsOpen(!isOpen)}
+                aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "No notifications"}
+                aria-expanded={isOpen}
+                aria-haspopup="true"
                 className={cn(
-                    "relative p-2 transition-colors rounded-full hover:bg-teal-50",
+                    "relative p-2 transition-colors rounded-full hover:bg-teal-50 min-h-[44px] min-w-[44px] flex items-center justify-center",
                     isOpen ? "text-teal-600 bg-teal-50" : "text-slate-400 hover:text-teal-600"
                 )}
             >

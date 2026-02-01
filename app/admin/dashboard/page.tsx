@@ -85,29 +85,29 @@ export default async function ClinicianDashboard() {
                     <p className="text-gray-500 text-sm">Real-time patient monitoring</p>
                 </div>
 
-                <div className="flex gap-4">
-                    <Card padding="md" className="flex items-center gap-3 min-w-[140px] bg-white border-l-4 border-l-alert">
-                        <div>
-                            <p className="text-xs text-muted font-bold uppercase">Critical</p>
-                            <p className="text-2xl font-bold text-alert">{highRiskCount}</p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <Card padding="sm" className="flex flex-col sm:flex-row items-center sm:gap-3 gap-1 min-w-0 bg-white border-l-4 border-l-alert">
+                        <div className="text-center sm:text-left flex-1 w-full">
+                            <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Critical</p>
+                            <p className="text-xl sm:text-2xl font-bold text-alert leading-tight">{highRiskCount}</p>
                         </div>
-                        <AlertTriangle className="h-6 w-6 text-alert/50" />
+                        <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-alert/50 flex-shrink-0" />
                     </Card>
 
-                    <Card padding="md" className="flex items-center gap-3 min-w-[140px] bg-white border-l-4 border-l-warning">
-                        <div>
-                            <p className="text-xs text-muted font-bold uppercase">Monitor</p>
-                            <p className="text-2xl font-bold text-warning-dark">{moderateRiskCount}</p>
+                    <Card padding="sm" className="flex flex-col sm:flex-row items-center sm:gap-3 gap-1 min-w-0 bg-white border-l-4 border-l-warning">
+                        <div className="text-center sm:text-left flex-1 w-full">
+                            <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Monitor</p>
+                            <p className="text-xl sm:text-2xl font-bold text-warning-dark leading-tight">{moderateRiskCount}</p>
                         </div>
-                        <AlertCircle className="h-6 w-6 text-warning/50" />
+                        <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-warning/50 flex-shrink-0" />
                     </Card>
 
-                    <Card padding="md" className="flex items-center gap-3 min-w-[140px] bg-white border-l-4 border-l-primary">
-                        <div>
-                            <p className="text-xs text-muted font-bold uppercase">Total</p>
-                            <p className="text-2xl font-bold text-primary">{processedPatients.length}</p>
+                    <Card padding="sm" className="flex flex-col sm:flex-row items-center sm:gap-3 gap-1 min-w-0 bg-white border-l-4 border-l-primary">
+                        <div className="text-center sm:text-left flex-1 w-full">
+                            <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Total</p>
+                            <p className="text-xl sm:text-2xl font-bold text-primary leading-tight">{processedPatients.length}</p>
                         </div>
-                        <Filter className="h-6 w-6 text-primary/50" />
+                        <Filter className="h-5 w-5 sm:h-6 sm:w-6 text-primary/50 flex-shrink-0" />
                     </Card>
                 </div>
             </div>

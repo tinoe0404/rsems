@@ -41,14 +41,17 @@ export default function AdminLayout({
             {/* Sidebar */}
             <aside className="w-64 bg-[#00695C] text-white fixed h-full hidden md:flex flex-col">
                 <div className="p-6 border-b border-white/10">
-                    <div className="flex items-center gap-2">
-                        <div className="p-2 bg-white/10 rounded-lg">
-                            <ShieldAlert className="h-6 w-6 text-white" />
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <div className="p-2 bg-white/10 rounded-lg">
+                                <ShieldAlert className="h-6 w-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="font-bold text-lg leading-tight">RSEMS</h1>
+                                <span className="text-xs text-white/70 uppercase tracking-wider">Clinician Portal</span>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="font-bold text-lg leading-tight">RSEMS</h1>
-                            <span className="text-xs text-white/70 uppercase tracking-wider">Clinician Portal</span>
-                        </div>
+                        <AdminNotificationBell />
                     </div>
                 </div>
 
@@ -73,11 +76,7 @@ export default function AdminLayout({
                     })}
                 </nav>
 
-                <div className="p-4 border-t border-white/10 space-y-2">
-                    <div className="flex items-center justify-between px-4 py-2">
-                        <span className="text-xs text-white/50 uppercase tracking-wider">Alerts</span>
-                        <AdminNotificationBell />
-                    </div>
+                <div className="p-4 border-t border-white/10">
                     <LogoutButton label="Exit to App" />
                 </div>
             </aside>

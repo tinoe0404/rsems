@@ -143,17 +143,47 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
         const diff = new Date().getTime() - new Date(dateStr).getTime();
         const mins = Math.floor(diff / 60000);
         const hours = Math.floor(mins / 60);
+        const days = Math.floor(hours / 24);
 
         if (mins < 1) return `Just now`;
         if (mins < 60) return `${mins}m ago`;
         if (hours < 24) return `${hours}h ago`;
-        return new Date(dateStr).toLocaleDateString();
+        if (days < 7) return `${days}d ago`;
+
+        // Use consistent ISO-like format instead of locale-dependent toLocaleDateString()
+        const date = new Date(dateStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    const getStatusBadge = (score: number) => {
+        if (score >= 3) {
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-alert text-white shadow-sm">
+                    CRITICAL
+                </span>
+            );
+        }
+        if (score === 2) {
+            return (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-warning text-white border border-warning-dark/20">
+                    MONITOR
+                </span>
+            );
+        }
+        return (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-success text-white">
+                STABLE
+            </span>
+        );
     };
 
     return (
         <>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="overflow-x-auto">
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-gray-50 border-b border-gray-100">
                             <tr>
@@ -196,19 +226,7 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
                                             {patient.cancer_type}
                                         </td>
                                         <td className="px-6 py-4">
-                                            {patient.calculated_risk_score >= 3 ? (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-alert text-white shadow-sm">
-                                                    CRITICAL
-                                                </span>
-                                            ) : patient.calculated_risk_score === 2 ? (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-warning text-white border border-warning-dark/20">
-                                                    MONITOR
-                                                </span>
-                                            ) : (
-                                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-success text-white">
-                                                    STABLE
-                                                </span>
-                                            )}
+                                            {getStatusBadge(patient.calculated_risk_score)}
                                         </td>
                                         <td className="px-6 py-4 text-gray-500 flex items-center gap-2">
                                             <Clock className="h-3 w-3" />
@@ -230,6 +248,67 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
                             )}
                         </tbody>
                     </table>
+                </div>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden p-4 space-y-3">
+                    {patients.length === 0 ? (
+                        <EmptyState
+                            title="No Patient Logs"
+                            description="No symptom logs have been submitted today."
+                            className="border-none bg-transparent"
+                        />
+                    ) : (
+                        patients.map((patient) => (
+                            <div
+                                key={patient.log_id}
+                                className={cn(
+                                    "bg-white rounded-xl p-4 border-l-4 shadow-sm transition-all",
+                                    patient.calculated_risk_score >= 3
+                                        ? "border-l-alert bg-red-50/30"
+                                        : "border-l-gray-200"
+                                )}
+                            >
+                                <div className="flex items-start justify-between mb-3 gap-2">
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                                        {patient.calculated_risk_score >= 3 && (
+                                            <div className="h-2 w-2 rounded-full bg-alert animate-pulse flex-shrink-0" />
+                                        )}
+                                        <h3 className="font-bold text-gray-900 truncate">
+                                            {patient.full_name}
+                                        </h3>
+                                    </div>
+                                    {getStatusBadge(patient.calculated_risk_score)}
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3 mb-3">
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Diagnosis</p>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {patient.cancer_type}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-xs text-gray-500 mb-1">Last Update</p>
+                                        <p className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                                            <Clock className="h-3 w-3 flex-shrink-0" />
+                                            <span className="truncate">{getTimeAgo(patient.created_at)}</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleReviewClick(patient)}
+                                    className="w-full justify-center text-primary hover:text-primary-dark hover:bg-primary/10 border border-primary/10"
+                                >
+                                    Review Patient
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
