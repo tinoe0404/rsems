@@ -8,7 +8,8 @@ import {
     Calendar,
     Settings,
     LogOut,
-    ShieldAlert
+    ShieldAlert,
+    ClipboardList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MobileMenu } from "@/components/admin/MobileMenu";
@@ -32,6 +33,7 @@ export default function AdminLayout({
 
     const navItems = [
         { name: "Triage Board", href: "/admin/dashboard", icon: LayoutDashboard },
+        { name: "Symptom Logs", href: "/admin/logs", icon: ClipboardList },
         { name: "Patients", href: "/admin/patients", icon: Users },
         { name: "Appointments", href: "/admin/appointments", icon: Calendar },
     ];
@@ -41,17 +43,14 @@ export default function AdminLayout({
             {/* Sidebar */}
             <aside className="w-64 bg-[#00695C] text-white fixed h-full hidden md:flex flex-col">
                 <div className="p-6 border-b border-white/10">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <div className="p-2 bg-white/10 rounded-lg">
-                                <ShieldAlert className="h-6 w-6 text-white" />
-                            </div>
-                            <div>
-                                <h1 className="font-bold text-lg leading-tight">RSEMS</h1>
-                                <span className="text-xs text-white/70 uppercase tracking-wider">Clinician Portal</span>
-                            </div>
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 bg-white/10 rounded-lg">
+                            <ShieldAlert className="h-6 w-6 text-white" />
                         </div>
-                        <AdminNotificationBell />
+                        <div>
+                            <h1 className="font-bold text-lg leading-tight">RSEMS</h1>
+                            <span className="text-xs text-white/70 uppercase tracking-wider">Clinician Portal</span>
+                        </div>
                     </div>
                 </div>
 
@@ -85,8 +84,19 @@ export default function AdminLayout({
             <MobileMenu navItems={navItems} />
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 p-4 md:p-8 bg-background min-h-screen">
-                {children}
+            <main className="flex-1 md:ml-64 bg-background min-h-screen flex flex-col">
+                {/* Desktop Header */}
+                <header className="hidden md:flex items-center justify-end h-16 px-8 bg-white border-b border-gray-200 sticky top-0 z-10">
+                    <div className="flex items-center gap-4">
+                        <span className="text-sm text-gray-500">Admin Portal</span>
+                        <div className="h-4 w-px bg-gray-200" />
+                        <AdminNotificationBell variant="header" />
+                    </div>
+                </header>
+
+                <div className="p-4 md:p-8 flex-1">
+                    {children}
+                </div>
             </main>
         </div>
     );

@@ -9,7 +9,11 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-export function AdminNotificationBell() {
+interface AdminNotificationBellProps {
+    variant?: 'sidebar' | 'header';
+}
+
+export function AdminNotificationBell({ variant = 'sidebar' }: AdminNotificationBellProps) {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isOpen, setIsOpen] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -17,6 +21,8 @@ export function AdminNotificationBell() {
     const router = useRouter();
     const supabase = createClient();
     const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // ... (existing useEffects remain same, logic is unchanged)
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -144,6 +150,18 @@ export function AdminNotificationBell() {
         }
     };
 
+    const buttonClass = variant === 'sidebar'
+        ? cn(
+            "relative p-2 transition-colors rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center",
+            isOpen ? "text-white bg-white/10" : "text-white/70 hover:text-white hover:bg-white/5"
+        )
+        : cn(
+            "relative p-2 transition-colors rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center",
+            isOpen ? "text-primary bg-primary/10" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+        );
+
+    const badgeBorderClass = variant === 'sidebar' ? "border-[#00695C]" : "border-white";
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button
@@ -151,12 +169,7 @@ export function AdminNotificationBell() {
                 aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : "No notifications"}
                 aria-expanded={isOpen}
                 aria-haspopup="true"
-                className={cn(
-                    "relative p-2 transition-colors rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center",
-                    isOpen
-                        ? "text-white bg-white/10"
-                        : "text-white/70 hover:text-white hover:bg-white/5"
-                )}
+                className={buttonClass}
             >
                 {unreadCount > 0 ? (
                     <BellRing className="h-5 w-5 animate-pulse" />
@@ -165,7 +178,10 @@ export function AdminNotificationBell() {
                 )}
 
                 {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full border-2 border-[#00695C] flex items-center justify-center text-[10px] font-bold text-white">
+                    <span className={cn(
+                        "absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full border-2 flex items-center justify-center text-[10px] font-bold text-white",
+                        badgeBorderClass
+                    )}>
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                 )}
