@@ -86,12 +86,14 @@ export async function createBulkNotifications(
 
         if (error) {
             console.error("Failed to create bulk notifications:", error);
+            console.error("Notification data attempted:", JSON.stringify(notificationData, null, 2));
             return {
                 success: false,
                 error: "Failed to create notifications",
             };
         }
 
+        console.log(`[DEBUG] Successfully created ${notificationData.length} notifications`);
         return { success: true };
     } catch (err) {
         console.error("Unexpected error creating bulk notifications:", err);

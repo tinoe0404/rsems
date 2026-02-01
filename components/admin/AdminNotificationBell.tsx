@@ -35,12 +35,17 @@ export function AdminNotificationBell() {
 
     const initializeNotifications = async () => {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+            console.log('[AdminNotificationBell] No user found');
+            return;
+        }
 
+        console.log('[AdminNotificationBell] Initializing for user:', user.id);
         setUserId(user.id);
         await fetchNotifications(user.id);
 
         // Subscribe to new notifications
+        console.log('[AdminNotificationBell] Setting up realtime subscription...');
         const channel = supabase
             .channel('admin_notifications')
             .on(
@@ -52,6 +57,7 @@ export function AdminNotificationBell() {
                     filter: `user_id=eq.${user.id}`,
                 },
                 (payload) => {
+                    console.log('[AdminNotificationBell] Received new notification:', payload);
                     const newNotification = payload.new as Notification;
                     setNotifications(prev => [newNotification, ...prev]);
                     setUnreadCount(prev => prev + 1);
@@ -69,9 +75,12 @@ export function AdminNotificationBell() {
                     }
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                console.log('[AdminNotificationBell] Subscription status:', status);
+            });
 
         return () => {
+            console.log('[AdminNotificationBell] Cleaning up subscription');
             supabase.removeChannel(channel);
         };
     };

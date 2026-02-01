@@ -57,6 +57,7 @@ export async function submitDailyLog(
 
         // 5. Notify clinicians if critical symptoms detected
         if (requiresAction) {
+            console.log('[DEBUG] Critical symptom detected, notifying clinicians...');
             try {
                 // Get patient name for notification
                 const { data: profileData } = await supabase
@@ -66,12 +67,18 @@ export async function submitDailyLog(
                     .single();
 
                 const patientName = (profileData as Profile | null)?.full_name || "A patient";
+                console.log('[DEBUG] Patient name:', patientName);
 
                 // Get all clinicians
-                const { data: clinicians } = await supabase
+                const { data: clinicians, error: clinicianError } = await supabase
                     .from('profiles')
                     .select('id')
                     .eq('role', 'clinician');
+
+                console.log('[DEBUG] Clinicians found:', clinicians?.length || 0);
+                if (clinicianError) {
+                    console.error('[DEBUG] Error fetching clinicians:', clinicianError);
+                }
 
                 if (clinicians && clinicians.length > 0) {
                     // Create notifications for all clinicians
@@ -83,7 +90,9 @@ export async function submitDailyLog(
                         resourceId: user.id, // Link to patient for drill-down
                     }));
 
-                    await createBulkNotifications(notifications);
+                    console.log('[DEBUG] Creating notifications for', notifications.length, 'clinicians');
+                    const result = await createBulkNotifications(notifications);
+                    console.log('[DEBUG] Notification creation result:', result);
                 } else {
                     console.warn('No clinicians found to notify for critical symptom');
                 }
@@ -92,6 +101,7 @@ export async function submitDailyLog(
                 console.error('Failed to create clinician notifications:', notificationError);
             }
         }
+
 
         // 6. Return success and triage result
         return {
