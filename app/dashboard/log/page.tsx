@@ -3,7 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { type Profile } from "@/types/database.types";
 import { SymptomLogger } from "@/components/dashboard/SymptomLogger";
 import { Card } from "@/components/ui/Card";
-import { Heart } from "lucide-react";
+import { Heart, ArrowLeft } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/Button";
 
 export default async function SymptomLogPage() {
     const supabase = await createClient();
@@ -47,7 +49,12 @@ export default async function SymptomLogPage() {
             {/* Header */}
             <div className="bg-surface border-b border-border sticky top-0 z-30">
                 <div className="container mx-auto px-4 py-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-4">
+                        <Link href="/dashboard">
+                            <Button variant="ghost" size="sm" className="-ml-2">
+                                <ArrowLeft className="h-5 w-5" />
+                            </Button>
+                        </Link>
                         <div className="rounded-full bg-primary/10 p-2">
                             <Heart className="h-6 w-6 text-primary" strokeWidth={2} />
                         </div>

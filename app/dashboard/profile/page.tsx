@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { PatientLogoutButton } from "@/components/dashboard/PatientLogoutButton";
 
 export default function ProfilePage() {
     const [profile, setProfile] = useState<Profile | null>(null);
@@ -210,6 +211,15 @@ export default function ProfilePage() {
                                 </Button>
                             </div>
                         </div>
+                    </Card>
+
+                    {/* Logout Section */}
+                    <Card padding="lg" className="mt-6">
+                        <h3 className="font-semibold text-lg mb-4 text-foreground">Account Actions</h3>
+                        <p className="text-sm text-muted mb-4">
+                            Logging out will end your current session. You can log back in anytime.
+                        </p>
+                        <PatientLogoutButton variant="destructive" />
                     </Card>
                 </form>
             </main>

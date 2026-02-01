@@ -13,13 +13,18 @@ import {
     Sun,
     Moon,
     Cloud,
-    Droplets
+    Droplets,
+    LogOut,
+    Settings,
+    ChevronDown
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { PatientAppointments } from "@/components/dashboard/PatientAppointments";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
+import { PatientLogoutButton } from "@/components/dashboard/PatientLogoutButton";
+import { useState, useRef, useEffect } from "react";
 
 interface DashboardClientProps {
     profile: Profile;
@@ -31,6 +36,19 @@ export function DashboardClient({ profile, email, daysSinceTreatment }: Dashboar
     const timeOfDay = new Date().getHours();
     const greeting = timeOfDay < 12 ? "Good Morning" : timeOfDay < 18 ? "Good Afternoon" : "Good Evening";
     const firstName = profile.full_name.split(" ")[0];
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsDropdownOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // Animation variants
     const container = {
@@ -61,11 +79,70 @@ export function DashboardClient({ profile, email, daysSinceTreatment }: Dashboar
                     </div>
                     <div className="flex items-center gap-4">
                         <NotificationBell />
-                        <Link href="/dashboard/profile">
-                            <div className="h-9 w-9 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-medium shadow-md shadow-teal-500/20 ring-2 ring-white cursor-pointer hover:scale-105 transition-transform">
-                                {profile.full_name[0]}
-                            </div>
-                        </Link>
+
+                        {/* Desktop Logout Button */}
+                        <div className="hidden md:block">
+                            <PatientLogoutButton />
+                        </div>
+
+                        {/* Profile Avatar with Dropdown */}
+                        <div className="relative" ref={dropdownRef}>
+                            <button
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                className="flex items-center gap-2 group"
+                            >
+                                <div className="h-9 w-9 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-medium shadow-md shadow-teal-500/20 ring-2 ring-white cursor-pointer hover:scale-105 transition-transform">
+                                    {profile.full_name[0]}
+                                </div>
+                                <ChevronDown className={`h-4 w-4 text-slate-600 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                            </button>
+
+                            {/* Dropdown Menu */}
+                            <AnimatePresence>
+                                {isDropdownOpen && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{ duration: 0.2 }}
+                                        className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
+                                    >
+                                        {/* User Info */}
+                                        <div className="px-4 py-3 border-b border-slate-100 bg-slate-50">
+                                            <p className="font-semibold text-slate-900 truncate">{profile.full_name}</p>
+                                            <p className="text-xs text-slate-500 truncate">{email}</p>
+                                        </div>
+
+                                        {/* Menu Items */}
+                                        <div className="py-1">
+                                            <Link
+                                                href="/dashboard/profile"
+                                                onClick={() => setIsDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                            >
+                                                <User className="h-4 w-4 text-slate-500" />
+                                                My Profile
+                                            </Link>
+                                            <Link
+                                                href="/dashboard/appointments"
+                                                onClick={() => setIsDropdownOpen(false)}
+                                                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                                            >
+                                                <Calendar className="h-4 w-4 text-slate-500" />
+                                                My Appointments
+                                            </Link>
+                                        </div>
+
+                                        {/* Logout - Mobile Only */}
+                                        <div className="md:hidden border-t border-slate-100">
+                                            <div className="p-2">
+                                                <PatientLogoutButton className="w-full justify-start" />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     </div>
                 </div>
             </nav>
