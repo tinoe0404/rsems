@@ -13,6 +13,7 @@ import { Heart, User, Mail, Lock, Check } from "lucide-react";
 
 export default function SignupPage() {
     const router = useRouter();
+    const [hospitalId, setHospitalId] = useState("");
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -41,6 +42,11 @@ export default function SignupPage() {
         setError(null);
 
         // Validation
+        if (hospitalId.trim() !== "3") {
+            setError("Invalid Hospital Number. Access restricted.");
+            return;
+        }
+
         if (!fullName.trim()) {
             setError("Please enter your full name.");
             return;
@@ -119,6 +125,17 @@ export default function SignupPage() {
                 <Card padding="lg">
                     <form onSubmit={handleSignup} className="space-y-5">
                         <AuthError message={error} />
+
+                        <Input
+                            label="Hospital Number"
+                            type="text"
+                            id="hospitalId"
+                            value={hospitalId}
+                            onChange={(e) => setHospitalId(e.target.value)}
+                            placeholder="Enter Hospital ID"
+                            required
+                            disabled={isLoading}
+                        />
 
                         <Input
                             label="Full Name"
