@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         .from("profiles")
         .select("role")
         .eq("id", user.id)
-        .single() as { data: { role: string } | null };
+        .single() as any;
 
     if (profile?.role !== "clinician") {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         // but better: update the insert to return data.
 
         // Refetched strategy:
-        const { data: appointmentData, error: aptError } = await supabase.from("appointments")
+        const { data: appointmentData, error: aptError } = await (supabase.from("appointments") as any)
             .insert({
                 patient_id: patientId,
                 clinician_id: user.id,
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         // Use Admin Client for notification insert to bypass RLS
         const supabaseAdmin = createAdminClient();
 
-        const { error: notificationError } = await supabaseAdmin.from('notifications')
+        const { error: notificationError } = await (supabaseAdmin.from('notifications') as any)
             .insert({
                 user_id: patientId,
                 type: 'appointment_new',
