@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { type NotificationInsert } from "@/types/database.types";
+import { type DbNotificationInsert as NotificationInsert } from "@/types/database.types";
 
 export interface CreateNotificationParams {
     userId: string;

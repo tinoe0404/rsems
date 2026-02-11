@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Bell, BellRing, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Notification } from "@/types/database.types";
+import { DbNotification as Notification } from "@/types/database.types";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -89,31 +89,40 @@ export function NotificationBell() {
         }
     };
 
-    const markAsRead = async (notificationId: string, resourceId: string | null) => {
+    const markAsRead = async (notificationId: string | null = null, resourceId: string | null = null) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
         // Optimistic update
-        setNotifications(prev =>
-            prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-        );
-        setUnreadCount(prev => Math.max(0, prev - 1));
+        if (notificationId === null) {
+            // Mark ALL as read
+            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+            setUnreadCount(0);
 
-        // Background update
-        const { error } = await supabase
-            .from('notifications')
-            // @ts-ignore
-            .update({ is_read: true })
-            .eq('id', notificationId);
+            // Background update all
+            await (supabase
+                .from('notifications') as any)
+                .update({ is_read: true })
+                .eq('user_id', user.id)
+                .eq('is_read', false); // Only update unread ones
+        } else {
+            // Mark ONE as read
+            setNotifications(prev =>
+                prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
+            );
+            setUnreadCount(prev => Math.max(0, prev - 1));
 
-        if (error) {
-            console.error("Failed to mark as read:", error);
-            // Revert if critical, but for read status it's acceptable to be eventually consistent
-        }
+            // Background update one
+            await (supabase
+                .from('notifications') as any)
+                .update({ is_read: true })
+                .eq('id', notificationId);
 
-        // Action based on resource
-        setIsOpen(false);
-        if (resourceId) {
-            // If it's an appointment, go to appointments page
-            // Ideally detailed view, but list is active for now
-            router.push('/dashboard/appointments');
+            // Action based on resource
+            setIsOpen(false);
+            if (resourceId) {
+                router.push('/dashboard/appointments');
+            }
         }
     };
 

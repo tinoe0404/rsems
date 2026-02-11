@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
         // but better: update the insert to return data.
 
         // Refetched strategy:
-        const { data: appointmentData, error: aptError } = await (supabase.from("appointments") as any)
+        const { data: appointmentData, error: aptError } = await supabase.from("appointments")
             .insert({
                 patient_id: patientId,
                 clinician_id: user.id,
@@ -62,13 +62,13 @@ export async function POST(request: NextRequest) {
         // Use Admin Client for notification insert to bypass RLS
         const supabaseAdmin = createAdminClient();
 
-        const { error: notificationError } = await (supabaseAdmin.from('notifications') as any)
+        const { error: notificationError } = await supabaseAdmin.from('notifications')
             .insert({
                 user_id: patientId,
                 type: 'appointment_new',
                 title: 'New Appointment Scheduled',
                 message: `You have a new appointment scheduled for ${new Date(scheduledAt).toLocaleDateString()}.`,
-                resource_id: appointmentData.id,
+                resource_id: appointmentData?.id || null,
                 is_read: false
             });
 

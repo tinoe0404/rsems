@@ -7,6 +7,18 @@
  */
 
 // =====================================================
+// JSON TYPE
+// =====================================================
+
+export type Json =
+    | string
+    | number
+    | boolean
+    | null
+    | { [key: string]: Json | undefined }
+    | Json[]
+
+// =====================================================
 // ENUMS
 // =====================================================
 
@@ -39,7 +51,7 @@ export type SymptomCategory =
 /**
  * User Profile (extends Supabase Auth)
  */
-export interface Profile {
+export type Profile = {
     id: string; // UUID
     full_name: string;
     role: UserRole;
@@ -54,7 +66,7 @@ export interface Profile {
 /**
  * Insert type for Profile (excludes auto-generated fields)
  */
-export interface ProfileInsert {
+export type ProfileInsert = {
     id: string; // Must match auth.users.id
     full_name: string;
     role?: UserRole;
@@ -67,7 +79,7 @@ export interface ProfileInsert {
 /**
  * Update type for Profile (all fields optional)
  */
-export interface ProfileUpdate {
+export type ProfileUpdate = {
     full_name?: string;
     role?: UserRole;
     cancer_type?: string;
@@ -79,7 +91,7 @@ export interface ProfileUpdate {
 /**
  * Symptom Master (Static Library)
  */
-export interface SymptomMaster {
+export type SymptomMaster = {
     id: number;
     name: string;
     category: SymptomCategory;
@@ -103,7 +115,7 @@ export interface SymptomEntry {
 /**
  * Daily Log (Patient Symptom Tracking)
  */
-export interface DailyLog {
+export type DailyLog = {
     id: string; // UUID
     user_id: string; // UUID
     log_date: string; // ISO date string (YYYY-MM-DD)
@@ -129,7 +141,7 @@ export interface DailyLogInsert {
 /**
  * Update type for Daily Log
  */
-export interface DailyLogUpdate {
+export type DailyLogUpdate = {
     symptoms_entry?: SymptomEntry[];
     additional_notes?: string | null;
     // Can only update same-day logs
@@ -138,7 +150,7 @@ export interface DailyLogUpdate {
 /**
  * Appointment
  */
-export interface Appointment {
+export type Appointment = {
     id: string; // UUID
     patient_id: string; // UUID
     clinician_id: string | null; // UUID
@@ -156,7 +168,7 @@ export interface Appointment {
 /**
  * Insert type for Appointment
  */
-export interface AppointmentInsert {
+export type AppointmentInsert = {
     patient_id: string;
     clinician_id?: string | null;
     scheduled_at: string;
@@ -170,7 +182,7 @@ export interface AppointmentInsert {
 /**
  * Update type for Appointment
  */
-export interface AppointmentUpdate {
+export type AppointmentUpdate = {
     clinician_id?: string | null;
     scheduled_at?: string;
     duration_minutes?: number;
@@ -181,7 +193,7 @@ export interface AppointmentUpdate {
 }
 
 // =====================================================
-export interface Notification {
+export type DbNotification = {
     id: string;
     user_id: string;
     type: string; // 'appointment_new'
@@ -192,7 +204,7 @@ export interface Notification {
     created_at: string;
 }
 
-export interface NotificationInsert {
+export type DbNotificationInsert = {
     user_id: string;
     type: string;
     title: string;
@@ -201,7 +213,7 @@ export interface NotificationInsert {
     is_read?: boolean;
 }
 
-export interface NotificationUpdate {
+export type DbNotificationUpdate = {
     is_read?: boolean;
 }
 
@@ -361,7 +373,8 @@ export type TableName =
     | 'profiles'
     | 'symptoms_master'
     | 'daily_logs'
-    | 'appointments';
+    | 'appointments'
+    | 'notifications';
 
 /**
  * View Names
@@ -392,39 +405,41 @@ export function isAppointmentStatus(value: string): value is AppointmentStatus {
 }
 
 // =====================================================
-// SUPABASE CLIENT TYPES
+// DATABASE SCHEMA
 // =====================================================
 
-/**
- * Database Schema (for Supabase client)
- */
-export interface Database {
+export type Database = {
     public: {
         Tables: {
             profiles: {
                 Row: Profile;
                 Insert: ProfileInsert;
                 Update: ProfileUpdate;
+                Relationships: [];
             };
             symptoms_master: {
                 Row: SymptomMaster;
                 Insert: Omit<SymptomMaster, 'id' | 'created_at'>;
                 Update: Partial<Omit<SymptomMaster, 'id' | 'created_at'>>;
+                Relationships: [];
             };
             daily_logs: {
                 Row: DailyLog;
                 Insert: DailyLogInsert;
                 Update: DailyLogUpdate;
+                Relationships: [];
             };
             appointments: {
                 Row: Appointment;
                 Insert: AppointmentInsert;
                 Update: AppointmentUpdate;
+                Relationships: [];
             };
             notifications: {
-                Row: Notification;
-                Insert: NotificationInsert;
-                Update: NotificationUpdate;
+                Row: DbNotification;
+                Insert: DbNotificationInsert;
+                Update: DbNotificationUpdate;
+                Relationships: [];
             };
         };
         Views: {
@@ -437,15 +452,19 @@ export interface Database {
         };
         Functions: {
             calculate_risk_score: {
-                Args: { symptoms: SymptomEntry[] };
+                Args: {
+                    symptoms: Json;
+                };
                 Returns: SeverityLevel;
             };
         };
+        Enums: {
+            [_ in never]: never;
+        };
+        CompositeTypes: {
+            [_ in never]: never;
+        };
     };
-}
+};
 
-// =====================================================
-// EXPORTS
-// =====================================================
-
-export type { Database as default };
+export default Database;

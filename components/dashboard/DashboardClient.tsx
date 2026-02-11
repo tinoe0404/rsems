@@ -21,6 +21,7 @@ import {
 import Link from "next/link";
 import { format } from "date-fns";
 import { PatientAppointments } from "@/components/dashboard/PatientAppointments";
+import { WellnessCard } from "@/components/dashboard/WellnessCard";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface DashboardClientProps {
@@ -121,45 +122,9 @@ export function DashboardClient({ profile, email, daysSinceTreatment }: Dashboar
                             </Link>
                         </motion.div>
 
-                        {/* Profile Summary (Tall Card) */}
-                        <motion.div variants={item} className="md:col-span-1 lg:col-span-1 md:row-span-2 bg-white rounded-3xl p-6 border border-slate-100 shadow-sm flex flex-col items-center text-center relative overflow-hidden group hover:border-teal-100 transition-colors">
-                            <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-slate-50 to-transparent"></div>
-
-                            <div className="relative z-10 mt-4">
-                                <div className="h-24 w-24 mx-auto bg-slate-100 rounded-full p-1 border-4 border-white shadow-md">
-                                    <div className="h-full w-full bg-slate-200 rounded-full flex items-center justify-center text-slate-400">
-                                        <User size={40} strokeWidth={1.5} />
-                                    </div>
-                                </div>
-                                <h3 className="text-lg font-bold text-slate-900 mt-4">{profile.full_name}</h3>
-                                <p className="text-sm text-slate-500">{email}</p>
-                                <div className="mt-2 inline-block px-3 py-1 bg-slate-100 rounded-full text-xs font-medium text-slate-600 uppercase tracking-wide">
-                                    {profile.cancer_type}
-                                </div>
-                            </div>
-
-                            <div className="mt-8 w-full space-y-3">
-                                <div className="flex justify-between items-center text-sm p-3 bg-slate-50 rounded-xl">
-                                    <span className="text-slate-500">Treatment Start</span>
-                                    <span className="font-semibold text-slate-700">
-                                        {profile.treatment_start_date ? format(new Date(profile.treatment_start_date), "MMM yyyy") : "N/A"}
-                                    </span>
-                                </div>
-                                <div className="flex justify-between items-center text-sm p-3 bg-slate-50 rounded-xl">
-                                    <span className="text-slate-500">Status</span>
-                                    <span className="font-semibold text-emerald-600 flex items-center gap-1">
-                                        <span className="h-2 w-2 rounded-full bg-emerald-500"></span> Active
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="mt-auto w-full pt-6">
-                                <Link href="/dashboard/profile">
-                                    <button className="w-full py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center justify-center gap-2">
-                                        View Profile
-                                    </button>
-                                </Link>
-                            </div>
+                        {/* Daily Wellness Insight (Replaces Profile) */}
+                        <motion.div variants={item} className="md:col-span-1 lg:col-span-1 md:row-span-2">
+                            <WellnessCard />
                         </motion.div>
 
                         {/* Recent History / Quick Stat (Small Card) */}

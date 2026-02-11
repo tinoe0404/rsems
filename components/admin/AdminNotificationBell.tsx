@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Bell, BellRing, X, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Notification } from "@/types/database.types";
+import { DbNotification as Notification } from "@/types/database.types";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -131,9 +131,8 @@ export function AdminNotificationBell({ variant = 'sidebar' }: AdminNotification
         setUnreadCount(prev => Math.max(0, prev - 1));
 
         // Background update
-        const { error } = await supabase
-            .from('notifications')
-            // @ts-ignore
+        const { error } = await (supabase
+            .from('notifications') as any)
             .update({ is_read: true })
             .eq('id', notificationId);
 
