@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { type NotificationInsert } from "@/types/database.types";
 
 export interface CreateNotificationParams {
@@ -28,7 +29,8 @@ export async function createNotification({
     resourceId = null,
 }: CreateNotificationParams): Promise<CreateNotificationResult> {
     try {
-        const supabase = await createClient();
+        // Use Admin Client to bypass RLS "WITH CHECK (false)" on notifications table
+        const supabase = createAdminClient();
 
         const notificationData: NotificationInsert = {
             user_id: userId,
@@ -69,7 +71,8 @@ export async function createBulkNotifications(
     notifications: CreateNotificationParams[]
 ): Promise<CreateNotificationResult> {
     try {
-        const supabase = await createClient();
+        // Use Admin Client to bypass RLS
+        const supabase = createAdminClient();
 
         const notificationData: NotificationInsert[] = notifications.map(n => ({
             user_id: n.userId,

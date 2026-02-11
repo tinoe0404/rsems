@@ -28,30 +28,41 @@ export function NotificationBell() {
         document.addEventListener("keydown", handleEscapeKey);
 
         // Subscribe to new notifications
-        const channel = supabase
-            .channel('notifications_update')
-            .on(
-                'postgres_changes',
-                {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'notifications',
-                    filter: `user_id=eq.${(supabase.auth.getUser() as any).data?.user?.id}` // Ideally we get user ID cleanly
-                },
-                (payload) => {
-                    const newNotification = payload.new as Notification;
-                    setNotifications(prev => [newNotification, ...prev]);
-                    setUnreadCount(prev => prev + 1);
-                    toast.info("New Notification", {
-                        description: newNotification.title
-                    });
-                }
-            )
-            .subscribe();
+        const setupSubscription = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const channel = supabase
+                .channel('notifications_update')
+                .on(
+                    'postgres_changes',
+                    {
+                        event: 'INSERT',
+                        schema: 'public',
+                        table: 'notifications',
+                        filter: `user_id=eq.${user.id}`
+                    },
+                    (payload) => {
+                        const newNotification = payload.new as Notification;
+                        setNotifications(prev => [newNotification, ...prev]);
+                        setUnreadCount(prev => prev + 1);
+                        toast.info("New Notification", {
+                            description: newNotification.title
+                        });
+                    }
+                )
+                .subscribe();
+
+            return channel;
+        };
+
+        const channelPromise = setupSubscription();
 
         return () => {
             document.removeEventListener("keydown", handleEscapeKey);
-            supabase.removeChannel(channel);
+            channelPromise.then(channel => {
+                if (channel) supabase.removeChannel(channel);
+            });
         };
     }, []);
 

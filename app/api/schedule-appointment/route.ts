@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import nodemailer from "nodemailer";
 
 export async function POST(request: NextRequest) {
@@ -58,7 +59,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: "Failed to create appointment" }, { status: 500 });
         }
 
-        const { error: notificationError } = await (supabase.from('notifications') as any)
+        // Use Admin Client for notification insert to bypass RLS
+        const supabaseAdmin = createAdminClient();
+
+        const { error: notificationError } = await (supabaseAdmin.from('notifications') as any)
             .insert({
                 user_id: patientId,
                 type: 'appointment_new',
