@@ -266,7 +266,7 @@ export function DashboardClient({ profile, email, daysSinceTreatment }: Dashboar
                             <div>
                                 <h3 className="text-2xl font-bold text-slate-900 mb-1">History</h3>
                                 <p className="text-sm text-slate-500 mb-4">You have 0 logs this week</p>
-                                <Link href="/dashboard/log" className="text-sm font-semibold text-indigo-600 flex items-center gap-1 hover:gap-2 transition-all">
+                                <Link href="/dashboard/history" className="text-sm font-semibold text-indigo-600 flex items-center gap-1 hover:gap-2 transition-all">
                                     View Logs <ChevronRight className="h-4 w-4" />
                                 </Link>
                             </div>
