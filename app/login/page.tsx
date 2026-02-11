@@ -141,7 +141,7 @@ export default function LoginPage() {
                             autoComplete="current-password"
                         />
 
-                        <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center justify-between flex-wrap gap-2 text-sm">
                             <label className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="checkbox"
@@ -177,7 +177,7 @@ export default function LoginPage() {
                 </Card>
 
                 {/* Sign up link */}
-                <p className="text-center mt-6 text-muted">
+                <p className="text-center mt-6 text-sm sm:text-base text-muted">
                     Don&apos;t have an account?{" "}
                     <Link
                         href="/signup"

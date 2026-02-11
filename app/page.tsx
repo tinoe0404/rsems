@@ -17,7 +17,7 @@ export default function Home() {
             <div className="mb-4 inline-flex items-center justify-center rounded-full bg-primary/10 p-4">
               <Heart className="h-12 w-12 text-primary" strokeWidth={2} />
             </div>
-            <h1 className="mb-3 text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
+            <h1 className="mb-3 text-3xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
               Welcome to{" "}
               <span className="text-primary">RSEMS</span>
             </h1>
