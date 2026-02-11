@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/Card";
-import { Users, Search, Calendar, Phone, Activity } from "lucide-react";
+import { Users, Search, Calendar, Phone, Activity, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { type Profile } from "@/types/database.types";
@@ -23,17 +23,17 @@ export default async function AllPatientsPage() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">All Patients</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900">All Patients</h1>
                     <p className="text-gray-500 text-sm">Directory of all registered patients</p>
                 </div>
             </div>
 
-            {/* Content */}
-            <Card padding="none" className="bg-white overflow-hidden">
+            {/* Desktop Table View */}
+            <Card padding="none" className="hidden md:block bg-white overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-gray-50 border-b border-gray-100">
@@ -95,7 +95,7 @@ export default async function AllPatientsPage() {
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <Link
-                                                href={`/admin/patients/${patient.id}`} // We might need to implement this page too
+                                                href={`/admin/patients/${patient.id}`}
                                                 className="text-primary hover:text-primary-dark font-medium text-sm inline-flex items-center gap-1"
                                             >
                                                 View Details
@@ -108,6 +108,36 @@ export default async function AllPatientsPage() {
                     </table>
                 </div>
             </Card>
+
+            {/* Mobile List View */}
+            <div className="md:hidden space-y-4">
+                {patients?.length === 0 ? (
+                    <Card padding="lg" className="text-center text-gray-500">
+                        No patients found.
+                    </Card>
+                ) : (
+                    patients?.map((patient) => (
+                        <Link href={`/admin/patients/${patient.id}`} key={patient.id} className="block">
+                            <Card padding="md" className="flex items-center justify-between active:scale-[0.98] transition-transform">
+                                <div className="flex items-center gap-4">
+                                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                                        {patient.full_name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-gray-900">{patient.full_name}</p>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            <span className="inline-flex items-center px-2 py-0.5 rounded textxs font-medium bg-blue-50 text-blue-700 text-xs">
+                                                {patient.cancer_type || "No Diagnosis"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <ChevronRight className="h-5 w-5 text-gray-400" />
+                            </Card>
+                        </Link>
+                    ))
+                )}
+            </div>
         </div>
     );
 }
