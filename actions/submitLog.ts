@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { type SymptomEntry, type Profile } from "@/types/database.types";
 import { createBulkNotifications } from "./createNotification";
 
@@ -97,8 +98,9 @@ export async function submitDailyLog(
                 const patientName = (profileData as Profile | null)?.full_name || "A patient";
                 console.log('[DEBUG] Patient name:', patientName);
 
-                // Get all clinicians
-                const { data: clinicians, error: clinicianError } = await supabase
+                // Get all clinicians using Admin Client to bypass RLS
+                const supabaseAdmin = createAdminClient();
+                const { data: clinicians, error: clinicianError } = await supabaseAdmin
                     .from('profiles')
                     .select('id')
                     .eq('role', 'clinician');

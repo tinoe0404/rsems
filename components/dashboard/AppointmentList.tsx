@@ -6,6 +6,8 @@ import { type Appointment } from "@/types/database.types";
 import { Calendar, Clock, MapPin, Loader2, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/Button";
+import { cancelAppointment } from "@/actions/cancelAppointment";
+import { toast } from "sonner";
 
 type AppointmentWithClinician = Appointment & {
     clinician: { full_name: string } | null;
@@ -163,9 +165,37 @@ export function AppointmentList({ type }: AppointmentListProps) {
                                 <p><span className="font-semibold">Reason:</span> {apt.cancellation_reason}</p>
                             </div>
                         )}
+
+                        {type === 'upcoming' && ['scheduled', 'confirmed'].includes(apt.status) && (
+                            <div className="mt-3 flex justify-end">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+                                    onClick={async () => {
+                                        if (confirm("Are you sure you want to cancel this appointment?")) {
+                                            try {
+                                                const result = await cancelAppointment(apt.id);
+                                                if (result.success) {
+                                                    toast.success("Appointment cancelled");
+                                                    fetchAppointments(); // Refresh list
+                                                } else {
+                                                    toast.error(result.error || "Failed to cancel");
+                                                }
+                                            } catch (e) {
+                                                toast.error("An unexpected error occurred");
+                                            }
+                                        }
+                                    }}
+                                >
+                                    Cancel Appointment
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             ))}
         </div>
     );
 }
+
