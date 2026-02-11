@@ -29,9 +29,9 @@ export default async function AdminLogsPage() {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col gap-1">
-                <h1 className="text-2xl font-bold text-gray-900">Patient Symptom Logs</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">Patient Symptom Logs</h1>
                 <p className="text-gray-500 text-sm">Real-time daily reports from all patients</p>
             </div>
 

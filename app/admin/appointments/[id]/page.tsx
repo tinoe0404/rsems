@@ -43,32 +43,32 @@ export default async function AppointmentDetailsPage({ params }: { params: Promi
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
                 <Link href="/admin/appointments">
-                    <Button variant="outline" size="sm" className="gap-2">
+                    <Button variant="outline" size="sm" className="gap-2 flex-shrink-0">
                         <ArrowLeft className="h-4 w-4" />
-                        Back
+                        <span className="hidden sm:inline">Back</span>
                     </Button>
                 </Link>
-                <h1 className="text-2xl font-bold text-gray-900">Appointment Details</h1>
+                <h1 className="text-lg md:text-2xl font-bold text-gray-900">Appointment Details</h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Information */}
                 <div className="lg:col-span-2 space-y-6">
                     <Card padding="lg">
-                        <div className="flex justify-between items-start mb-6">
-                            <div>
-                                <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-6">
+                            <div className="min-w-0">
+                                <h2 className="text-lg md:text-xl font-bold text-gray-900 flex items-center gap-2 capitalize">
                                     {apt.appointment_type || "General Appointment"}
                                 </h2>
-                                <p className="text-gray-500 text-sm mt-1">
+                                <p className="text-gray-500 text-xs sm:text-sm mt-1 truncate">
                                     ID: {apt.id}
                                 </p>
                             </div>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(apt.status)} capitalize`}>
+                            <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium border flex-shrink-0 self-start ${getStatusColor(apt.status)} capitalize`}>
                                 {apt.status}
                             </span>
                         </div>
@@ -79,8 +79,8 @@ export default async function AppointmentDetailsPage({ params }: { params: Promi
                                     <Calendar className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Date</p>
-                                    <p className="text-lg font-semibold text-gray-900">
+                                    <p className="text-xs sm:text-sm font-medium text-gray-500">Date</p>
+                                    <p className="text-sm sm:text-lg font-semibold text-gray-900">
                                         {format(new Date(apt.scheduled_at), "EEEE, MMMM d, yyyy")}
                                     </p>
                                 </div>
@@ -91,8 +91,8 @@ export default async function AppointmentDetailsPage({ params }: { params: Promi
                                     <Clock className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-gray-500">Time</p>
-                                    <p className="text-lg font-semibold text-gray-900">
+                                    <p className="text-xs sm:text-sm font-medium text-gray-500">Time</p>
+                                    <p className="text-sm sm:text-lg font-semibold text-gray-900">
                                         {format(new Date(apt.scheduled_at), "h:mm a")}
                                         <span className="text-sm font-normal text-gray-500 ml-1">
                                             ({apt.duration_minutes} mins)

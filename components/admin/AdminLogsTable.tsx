@@ -52,8 +52,8 @@ export function AdminLogsTable({ logs: initialLogs }: AdminLogsTableProps) {
     return (
         <div className="space-y-4">
             {/* Search Bar */}
-            <div className="flex items-center gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-                <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
+                <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                     <input
                         type="text"
@@ -63,13 +63,13 @@ export function AdminLogsTable({ logs: initialLogs }: AdminLogsTableProps) {
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 flex-shrink-0">
                     Showing {filteredLogs.length} logs
                 </div>
             </div>
 
-            {/* Logs Table */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            {/* Desktop Logs Table */}
+            <div className="hidden md:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
                         <thead className="bg-gray-50 border-b border-gray-100">
@@ -154,6 +154,113 @@ export function AdminLogsTable({ logs: initialLogs }: AdminLogsTableProps) {
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+                {filteredLogs.length === 0 ? (
+                    <Card padding="lg" className="text-center text-gray-500">
+                        No logs found.
+                    </Card>
+                ) : (
+                    filteredLogs.map((log) => (
+                        <Card
+                            key={log.id}
+                            padding="md"
+                            className={cn(
+                                "flex flex-col gap-3",
+                                log.calculated_risk_score >= 3 && "border-l-4 border-l-red-500 bg-red-50/30"
+                            )}
+                        >
+                            {/* Row 1: Patient + Status */}
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    <div className="h-10 w-10 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                        {log.profiles?.full_name?.charAt(0) || "?"}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="font-bold text-gray-900 truncate text-base">
+                                            {log.profiles?.full_name || "Unknown"}
+                                        </h3>
+                                        <p className="text-xs text-gray-500">
+                                            {log.profiles?.phone_number || "No phone"}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex-shrink-0">
+                                    {getSeverityBadge(log.calculated_risk_score)}
+                                </div>
+                            </div>
+
+                            {/* Row 2: Details */}
+                            <div className="space-y-2.5">
+                                {/* Date */}
+                                <div className="flex items-center gap-2.5 text-sm text-gray-700">
+                                    <div className="w-5 flex justify-center">
+                                        <Calendar className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <span>
+                                        {format(new Date(log.created_at || log.log_date), "MMM d, yyyy")}
+                                        <span className="text-gray-400 ml-1">
+                                            at {format(new Date(log.created_at || log.log_date), "h:mm a")}
+                                        </span>
+                                    </span>
+                                </div>
+
+                                {/* Symptoms */}
+                                <div className="flex items-start gap-2.5 text-sm">
+                                    <div className="w-5 flex justify-center mt-0.5">
+                                        <AlertCircle className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+                                        {log.symptoms_entry?.slice(0, 4).map((sym: any, i: number) => (
+                                            <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 border border-gray-200">
+                                                {sym.symptom_name}
+                                                {summarySeverityIndicator(sym.severity)}
+                                            </span>
+                                        ))}
+                                        {(log.symptoms_entry?.length || 0) > 4 && (
+                                            <span className="text-xs text-gray-500 self-center">
+                                                +{log.symptoms_entry.length - 4} more
+                                            </span>
+                                        )}
+                                        {(!log.symptoms_entry || log.symptoms_entry.length === 0) && (
+                                            <span className="text-xs text-gray-400 italic">No symptoms reported</span>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Notes */}
+                                {log.additional_notes && (
+                                    <div className="flex items-start gap-2.5 text-sm">
+                                        <div className="w-5 flex justify-center mt-0.5">
+                                            <ChevronRight className="h-4 w-4 text-gray-400" />
+                                        </div>
+                                        <p className="text-xs text-gray-500 italic truncate flex-1">
+                                            &quot;{log.additional_notes}&quot;
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Row 3: Action */}
+                            <div className="pt-3 border-t border-gray-100">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setSelectedPatientForSchedule({
+                                        id: log.user_id,
+                                        name: log.profiles?.full_name || "Patient"
+                                    })}
+                                    className="w-full justify-center text-primary border-primary/20 hover:bg-primary/5"
+                                >
+                                    <CalendarPlus className="h-4 w-4 mr-2" />
+                                    Schedule Appointment
+                                </Button>
+                            </div>
+                        </Card>
+                    ))
+                )}
             </div>
 
             {/* Schedule Modal */}
