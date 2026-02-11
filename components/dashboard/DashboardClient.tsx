@@ -200,7 +200,7 @@ export function DashboardClient({ profile, email, daysSinceTreatment }: Dashboar
                             <div className="relative">
                                 {/* We wrap the existing component to give it a fresh context if needed, or pass props */}
                                 <div className="-mx-2">
-                                    <PatientAppointments />
+                                    <PatientAppointments limit={3} />
                                 </div>
                             </div>
                         </motion.div>
