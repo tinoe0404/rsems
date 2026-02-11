@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { type SymptomMaster } from "@/types/database.types";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -22,6 +23,7 @@ interface SymptomLoggerProps {
 type Step = 'select' | 'success';
 
 export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
+    const router = useRouter();
     const [step, setStep] = useState<Step>('select');
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -118,9 +120,7 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                         variant="primary"
                         size="lg"
                         onClick={() => {
-                            setStep('select');
-                            setSelectedIds(new Set());
-                            setSubmissionResult(null);
+                            router.push('/dashboard');
                         }}
                         className="w-full sm:w-auto"
                     >
