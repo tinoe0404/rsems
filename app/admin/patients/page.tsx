@@ -109,7 +109,7 @@ export default async function AllPatientsPage() {
                 </div>
             </Card>
 
-            {/* Mobile List View */}
+            {/* Android/Mobile List View - Stacked Layout for clarity */}
             <div className="md:hidden space-y-4">
                 {patients?.length === 0 ? (
                     <Card padding="lg" className="text-center text-gray-500">
@@ -117,24 +117,70 @@ export default async function AllPatientsPage() {
                     </Card>
                 ) : (
                     patients?.map((patient) => (
-                        <Link href={`/admin/patients/${patient.id}`} key={patient.id} className="block">
-                            <Card padding="md" className="flex items-center justify-between active:scale-[0.98] transition-transform">
-                                <div className="flex items-center gap-4">
-                                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
-                                        {patient.full_name.charAt(0)}
+                        <Card key={patient.id} padding="md" className="flex flex-col gap-4">
+                            {/* Row 1: Identity */}
+                            <div className="flex items-center gap-3">
+                                <div className="h-12 w-12 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-lg">
+                                    {patient.full_name.charAt(0)}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <h3 className="font-bold text-gray-900 truncate text-base">
+                                        {patient.full_name}
+                                    </h3>
+                                    <p className="text-xs text-gray-500 truncate">
+                                        ID: {patient.id.slice(0, 8)}...
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Row 2: Key Details Stack */}
+                            <div className="space-y-2.5">
+                                {/* Diagnosis */}
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-5 flex justify-center">
+                                        <Activity className="h-4 w-4 text-blue-500" />
                                     </div>
-                                    <div>
-                                        <p className="font-semibold text-gray-900">{patient.full_name}</p>
-                                        <div className="flex flex-wrap gap-2 mt-1">
-                                            <span className="inline-flex items-center px-2 py-0.5 rounded textxs font-medium bg-blue-50 text-blue-700 text-xs">
-                                                {patient.cancer_type || "No Diagnosis"}
-                                            </span>
-                                        </div>
+                                    <div className="flex-1">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-700">
+                                            {patient.cancer_type || "No Diagnosis"}
+                                        </span>
                                     </div>
                                 </div>
-                                <ChevronRight className="h-5 w-5 text-gray-400" />
-                            </Card>
-                        </Link>
+
+                                {/* Phone */}
+                                <div className="flex items-center gap-2.5 text-sm text-gray-700">
+                                    <div className="w-5 flex justify-center">
+                                        <Phone className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <span className="truncate">
+                                        {patient.phone_number || <span className="text-gray-400 italic">No phone connected</span>}
+                                    </span>
+                                </div>
+
+                                {/* Date */}
+                                <div className="flex items-center gap-2.5 text-sm text-gray-700">
+                                    <div className="w-5 flex justify-center">
+                                        <Calendar className="h-4 w-4 text-gray-400" />
+                                    </div>
+                                    <span>
+                                        {patient.treatment_start_date
+                                            ? `Started ${format(new Date(patient.treatment_start_date), 'MMM d, yyyy')}`
+                                            : <span className="text-gray-400 italic">Treatment not started</span>}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Row 3: Actions */}
+                            <div className="pt-3 border-t border-gray-100 flex items-center justify-end mt-1">
+                                <Link
+                                    href={`/admin/patients/${patient.id}`}
+                                    className="flex items-center gap-1 text-sm font-semibold text-primary active:text-primary-dark"
+                                >
+                                    View Patient Profile
+                                    <ChevronRight className="h-4 w-4" />
+                                </Link>
+                            </div>
+                        </Card>
                     ))
                 )}
             </div>
