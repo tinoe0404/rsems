@@ -38,6 +38,13 @@ export default async function DashboardLayout({
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col min-w-0 mb-16 md:mb-0">
+                {/* Desktop Header */}
+                <header className="hidden md:flex items-center justify-end h-16 px-8 bg-white border-b border-slate-200 sticky top-0 z-30">
+                    <div className="flex items-center gap-4">
+                        <NotificationBell />
+                    </div>
+                </header>
+
                 {/* Mobile Header */}
                 <header className="md:hidden sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
