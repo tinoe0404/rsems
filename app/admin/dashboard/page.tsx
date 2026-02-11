@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/Card";
 import { AlertTriangle, AlertCircle, Filter, Calendar, Plus, Clock, Activity, UserPlus } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/Button"; // Assuming Button component exists, or use standard HTML button with classes
+import { Button } from "@/components/ui/Button";
 import { CreateAppointmentDialog } from "@/components/admin/CreateAppointmentDialog";
 
 export default async function ClinicianDashboard() {
@@ -96,18 +96,20 @@ export default async function ClinicianDashboard() {
     const moderateRiskCount = processedPatients.filter(p => p.calculated_risk_score === 2).length;
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6 md:space-y-8">
             {/* Header & Stats */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Clinician Dashboard</h1>
+                    <h1 className="text-xl md:text-2xl font-bold text-gray-900">Clinician Dashboard</h1>
                     <p className="text-gray-500 text-sm">Overview of patient status and activities</p>
                 </div>
 
-                <div className="flex gap-2">
-                    <CreateAppointmentDialog />
-                    <Link href="/signup">
-                        <Button variant="outline" className="gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
+                    <div className="w-full sm:w-auto">
+                        <CreateAppointmentDialog />
+                    </div>
+                    <Link href="/signup" className="w-full sm:w-auto">
+                        <Button variant="outline" className="gap-2 w-full justify-center">
                             <UserPlus className="h-4 w-4" />
                             Register Patient
                         </Button>
@@ -116,35 +118,35 @@ export default async function ClinicianDashboard() {
             </div>
 
             {/* Key Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card padding="sm" className="flex flex-col sm:flex-row items-center sm:gap-3 gap-1 min-w-0 bg-white border-l-4 border-l-alert">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
+                <Card padding="sm" className="flex flex-col sm:flex-row items-center sm:gap-3 gap-2 min-w-0 bg-white border-l-4 border-l-alert">
                     <div className="text-center sm:text-left flex-1 w-full">
-                        <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Critical Patients</p>
+                        <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Critical</p>
                         <p className="text-xl sm:text-2xl font-bold text-alert leading-tight">{highRiskCount}</p>
                     </div>
                     <AlertTriangle className="h-5 w-5 sm:h-6 sm:w-6 text-alert/50 flex-shrink-0" />
                 </Card>
 
-                <Card padding="sm" className="flex flex-col sm:flex-row items-center sm:gap-3 gap-1 min-w-0 bg-white border-l-4 border-l-warning">
+                <Card padding="sm" className="flex flex-col sm:flex-row items-center sm:gap-3 gap-2 min-w-0 bg-white border-l-4 border-l-warning">
                     <div className="text-center sm:text-left flex-1 w-full">
-                        <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Monitor Watchlist</p>
+                        <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Watchlist</p>
                         <p className="text-xl sm:text-2xl font-bold text-warning-dark leading-tight">{moderateRiskCount}</p>
                     </div>
                     <AlertCircle className="h-5 w-5 sm:h-6 sm:w-6 text-warning/50 flex-shrink-0" />
                 </Card>
 
-                <Card padding="sm" className="flex flex-col sm:flex-row items-center sm:gap-3 gap-1 min-w-0 bg-white border-l-4 border-l-primary">
+                <Card padding="sm" className="col-span-2 md:col-span-1 flex flex-col sm:flex-row items-center sm:gap-3 gap-2 min-w-0 bg-white border-l-4 border-l-primary">
                     <div className="text-center sm:text-left flex-1 w-full">
-                        <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Active Patients</p>
+                        <p className="text-[10px] sm:text-xs text-muted font-bold uppercase tracking-wide">Active</p>
                         <p className="text-xl sm:text-2xl font-bold text-primary leading-tight">{processedPatients.length}</p>
                     </div>
                     <Filter className="h-5 w-5 sm:h-6 sm:w-6 text-primary/50 flex-shrink-0" />
                 </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
                 {/* Main Column: Triage Board */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4 md:space-y-6">
                     <div className="flex items-center justify-between">
                         <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                             <Activity className="h-5 w-5 text-gray-500" />
@@ -179,14 +181,14 @@ export default async function ClinicianDashboard() {
                                     <div key={apt.id} className="p-4 hover:bg-gray-50 transition-colors">
                                         <div className="flex justify-between items-start mb-1">
                                             <span className="text-sm font-medium text-gray-900">
-                                                {apt.status === 'scheduled' ? 'New Appointment' : `Appointment ${apt.status}`}
+                                                {apt.status === 'scheduled' ? 'New Appointment' : apt.status}
                                             </span>
                                             <span className="text-xs text-gray-500">
                                                 {format(new Date(apt.scheduled_at), 'MMM d')}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-600">
-                                            <span className="font-medium">{apt.patient?.full_name}</span> with {apt.clinician?.full_name || 'Unassigned'}
+                                        <p className="text-xs text-gray-600 truncate">
+                                            <span className="font-medium">{apt.patient?.full_name}</span> w/ {apt.clinician?.full_name?.split(' ')[0] || 'Unassigned'}
                                         </p>
                                     </div>
                                 ))
