@@ -11,7 +11,8 @@ import {
     AlertCircle,
     Clock,
     ArrowRight,
-    CalendarPlus
+    CalendarPlus,
+    User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ScheduleModal } from "@/components/admin/ScheduleModal";
@@ -219,7 +220,12 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
                                                 {patient.calculated_risk_score >= 3 && (
                                                     <div className="h-2 w-2 rounded-full bg-alert animate-pulse" />
                                                 )}
-                                                <span className="font-bold text-gray-900">{patient.full_name}</span>
+                                                <button
+                                                    onClick={() => router.push(`/admin/patients/${patient.user_id}`)}
+                                                    className="font-bold text-gray-900 hover:text-primary hover:underline text-left"
+                                                >
+                                                    {patient.full_name}
+                                                </button>
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-gray-600">
@@ -233,15 +239,26 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
                                             {getTimeAgo(patient.created_at)}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleReviewClick(patient)}
-                                                className="text-primary hover:text-primary-dark hover:bg-primary/10"
-                                            >
-                                                Review
-                                                <ArrowRight className="ml-1 h-3 w-3" />
-                                            </Button>
+                                            <div className="flex items-center gap-2 justify-end">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => router.push(`/admin/patients/${patient.user_id}`)}
+                                                    className="text-gray-500 hover:text-primary hover:bg-primary/5"
+                                                    title="View Profile"
+                                                >
+                                                    <User className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleReviewClick(patient)}
+                                                    className="text-primary hover:text-primary-dark hover:bg-primary/10 gap-1"
+                                                >
+                                                    Review
+                                                    <ArrowRight className="h-3 w-3" />
+                                                </Button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -274,9 +291,12 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
                                         {patient.calculated_risk_score >= 3 && (
                                             <div className="h-2 w-2 rounded-full bg-alert animate-pulse flex-shrink-0" />
                                         )}
-                                        <h3 className="font-bold text-gray-900 truncate">
+                                        <button
+                                            onClick={() => router.push(`/admin/patients/${patient.user_id}`)}
+                                            className="font-bold text-gray-900 truncate hover:text-primary hover:underline text-left"
+                                        >
                                             {patient.full_name}
-                                        </h3>
+                                        </button>
                                     </div>
                                     {getStatusBadge(patient.calculated_risk_score)}
                                 </div>
@@ -297,15 +317,26 @@ export function RealtimePatientList({ initialPatients }: RealtimePatientListProp
                                     </div>
                                 </div>
 
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleReviewClick(patient)}
-                                    className="w-full justify-center text-primary hover:text-primary-dark hover:bg-primary/10 border border-primary/10"
-                                >
-                                    Review Patient
-                                    <ArrowRight className="ml-2 h-4 w-4" />
-                                </Button>
+                                <div className="flex gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => router.push(`/admin/patients/${patient.user_id}`)}
+                                        className="flex-1 justify-center text-gray-700 border-gray-200"
+                                    >
+                                        <User className="mr-2 h-4 w-4" />
+                                        Profile
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleReviewClick(patient)}
+                                        className="flex-1 justify-center text-primary hover:text-primary-dark hover:bg-primary/10 border border-primary/10"
+                                    >
+                                        Review
+                                        <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         ))
                     )}

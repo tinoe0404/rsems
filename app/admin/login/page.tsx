@@ -14,7 +14,7 @@ import { ShieldAlert, Users } from "lucide-react";
 
 export default function ClinicianLoginPage() {
     const router = useRouter();
-    const [hospitalId, setHospitalId] = useState("");
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
@@ -27,11 +27,7 @@ export default function ClinicianLoginPage() {
         setError(null);
         setIsLoading(true);
 
-        if (hospitalId.trim() !== "3") {
-            setError("Invalid Hospital Number. Access restricted.");
-            setIsLoading(false);
-            return;
-        }
+
 
         try {
             const { data, error: signInError } = await supabase.auth.signInWithPassword({
@@ -100,16 +96,7 @@ export default function ClinicianLoginPage() {
                     <form onSubmit={handleLogin} className="space-y-6">
                         <AuthError message={error} />
 
-                        <Input
-                            label="Hospital Number"
-                            type="text"
-                            id="hospitalId"
-                            value={hospitalId}
-                            onChange={(e) => setHospitalId(e.target.value)}
-                            placeholder="Enter Hospital ID"
-                            required
-                            disabled={isLoading}
-                        />
+
 
                         <Input
                             label="Email Address"
