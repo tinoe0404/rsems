@@ -7,6 +7,7 @@ import { Menu, X, ShieldAlert, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/Button";
 import { AdminNotificationBell } from "@/components/admin/AdminNotificationBell";
+import { LogoutButton } from "@/components/admin/LogoutButton";
 
 interface NavItem {
     name: string;
@@ -91,14 +92,7 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                 </nav>
 
                 <div className="p-4 border-t border-white/10 absolute bottom-0 w-full mb-16">
-                    <Link
-                        href="/dashboard"
-                        onClick={() => setIsOpen(false)}
-                        className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-white/70 hover:bg-white/5 hover:text-white transition-colors"
-                    >
-                        <LogOut className="h-5 w-5" />
-                        Exit to App
-                    </Link>
+                    <LogoutButton label="Exit to App" />
                 </div>
             </div>
         </div>
