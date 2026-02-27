@@ -84,7 +84,7 @@ export default function AdminLayout({
             <MobileMenu navItems={navItems} />
 
             {/* Main Content */}
-            <main className="flex-1 md:ml-64 bg-background min-h-screen flex flex-col">
+            <main className="flex-1 md:ml-64 bg-background min-h-screen flex flex-col pt-16 md:pt-0">
                 {/* Desktop Header */}
                 <header className="hidden md:flex items-center justify-end h-16 px-8 bg-white border-b border-gray-200 sticky top-0 z-10">
                     <div className="flex items-center gap-4">

@@ -101,9 +101,6 @@ export function MobileMenu({ navItems }: MobileMenuProps) {
                     </Link>
                 </div>
             </div>
-
-            {/* Spacer to push content down below fixed header */}
-            <div className="h-16" />
         </div>
     );
 }
