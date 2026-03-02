@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { type Profile } from "@/types/database.types";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Loader2, User, Phone, Calendar, Activity, Mail, ArrowLeft, Save } from "lucide-react";
+import { Loader2, User, Phone, Calendar, Activity, Mail, ArrowLeft, Save, Hash } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -138,6 +138,17 @@ export default function ProfilePage() {
                                     {profile.full_name}
                                 </div>
                             </div>
+
+                            {profile.registration_number && (
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-medium text-muted">Registration Number</label>
+                                    <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20 text-primary font-bold">
+                                        <Hash className="h-4 w-4" />
+                                        {profile.registration_number}
+                                    </div>
+                                    <p className="text-xs text-muted">You can use this number to log in instead of your email.</p>
+                                </div>
+                            )}
 
                             <div className="grid gap-2">
                                 <label className="text-sm font-medium text-muted">Email Address</label>

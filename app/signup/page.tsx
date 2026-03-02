@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AuthError } from "@/components/auth/AuthError";
 import { LoadingSpinner } from "@/components/auth/LoadingSpinner";
-import { Heart, User, Mail, Lock, Check } from "lucide-react";
+import { getRegistrationNumber } from "@/actions/lookupPatient";
+import { Heart, User, Mail, Lock, Check, Copy, CheckCircle } from "lucide-react";
 
 export default function SignupPage() {
     const router = useRouter();
-    const [hospitalId, setHospitalId] = useState("");
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -21,6 +21,11 @@ export default function SignupPage() {
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Success state
+    const [registrationComplete, setRegistrationComplete] = useState(false);
+    const [regNumber, setRegNumber] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
 
     const supabase = createClient();
 
@@ -37,16 +42,19 @@ export default function SignupPage() {
 
     const passwordStrength = getPasswordStrength(password);
 
+    const handleCopyRegNumber = async () => {
+        if (regNumber) {
+            await navigator.clipboard.writeText(regNumber);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        }
+    };
+
     const handleSignup = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
 
         // Validation
-        if (hospitalId.trim() !== "3") {
-            setError("Invalid Hospital Number. Access restricted.");
-            return;
-        }
-
         if (!fullName.trim()) {
             setError("Please enter your full name.");
             return;
@@ -76,7 +84,7 @@ export default function SignupPage() {
                 options: {
                     data: {
                         full_name: fullName,
-                        role: "patient", // Explicitly set to patient - clinicians are created manually
+                        role: "patient",
                     },
                     emailRedirectTo: `${window.location.origin}/onboarding`,
                 },
@@ -95,16 +103,114 @@ export default function SignupPage() {
             }
 
             if (data.user) {
-                // Redirect to onboarding
-                router.push("/onboarding");
-                router.refresh();
+                // Fetch the auto-generated registration number
+                // Small delay to allow the DB trigger to execute
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                const { registrationNumber } = await getRegistrationNumber(
+                    data.user.id
+                );
+
+                setRegNumber(registrationNumber);
+                setRegistrationComplete(true);
             }
         } catch (err) {
             setError("An unexpected error occurred. Please try again.");
+        } finally {
             setIsLoading(false);
         }
     };
 
+    // Success Screen
+    if (registrationComplete) {
+        return (
+            <div className="min-h-screen bg-background flex items-center justify-center p-4 py-12">
+                <div className="w-full max-w-md">
+                    <div className="text-center mb-8">
+                        <div className="inline-flex items-center justify-center rounded-full bg-success/10 p-3 mb-4">
+                            <CheckCircle className="h-8 w-8 text-success" strokeWidth={2} />
+                        </div>
+                        <h1 className="text-3xl font-bold text-foreground">
+                            Registration Complete!
+                        </h1>
+                        <p className="text-muted mt-2">
+                            Your account has been created successfully
+                        </p>
+                    </div>
+
+                    <Card padding="lg" className="space-y-6">
+                        {/* Registration Number Display */}
+                        <div className="text-center">
+                            <p className="text-sm font-medium text-muted mb-2">
+                                Your Registration Number
+                            </p>
+                            <div className="bg-primary/5 border-2 border-primary/20 rounded-xl p-4 flex items-center justify-center gap-3">
+                                <span className="text-2xl sm:text-3xl font-bold text-primary tracking-wider">
+                                    {regNumber || "Loading..."}
+                                </span>
+                                {regNumber && (
+                                    <button
+                                        onClick={handleCopyRegNumber}
+                                        className="p-2 rounded-lg hover:bg-primary/10 transition-colors"
+                                        title="Copy to clipboard"
+                                    >
+                                        {copied ? (
+                                            <Check className="h-5 w-5 text-success" />
+                                        ) : (
+                                            <Copy className="h-5 w-5 text-primary" />
+                                        )}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Important Notice */}
+                        <div className="bg-warning/5 border border-warning/20 rounded-lg p-4">
+                            <p className="text-sm text-foreground font-medium mb-1">
+                                ⚠️ Important — Save this number!
+                            </p>
+                            <p className="text-xs text-muted">
+                                You can use this registration number to log in instead of your email.
+                                Please save it somewhere safe.
+                            </p>
+                        </div>
+
+                        {/* What's next */}
+                        <div className="space-y-2 text-sm text-muted">
+                            <p className="font-medium text-foreground">What&apos;s next?</p>
+                            <ul className="space-y-1">
+                                <li className="flex items-start gap-2">
+                                    <Check className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                                    <span>Check your email to verify your account</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Check className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                                    <span>Log in with your email or registration number</span>
+                                </li>
+                                <li className="flex items-start gap-2">
+                                    <Check className="h-4 w-4 text-success mt-0.5 flex-shrink-0" />
+                                    <span>Complete your treatment profile</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            className="w-full"
+                            onClick={() => {
+                                router.push("/login");
+                            }}
+                        >
+                            Continue to Login
+                        </Button>
+                    </Card>
+                </div>
+            </div>
+        );
+    }
+
+    // Registration Form
     return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4 py-12">
             <div className="w-full max-w-md">
@@ -125,17 +231,6 @@ export default function SignupPage() {
                 <Card padding="lg">
                     <form onSubmit={handleSignup} className="space-y-5">
                         <AuthError message={error} />
-
-                        <Input
-                            label="Hospital Number"
-                            type="text"
-                            id="hospitalId"
-                            value={hospitalId}
-                            onChange={(e) => setHospitalId(e.target.value)}
-                            placeholder="Enter Hospital ID"
-                            required
-                            disabled={isLoading}
-                        />
 
                         <Input
                             label="Full Name"
@@ -239,6 +334,13 @@ export default function SignupPage() {
                                     Privacy Policy
                                 </Link>
                             </label>
+                        </div>
+
+                        {/* Info about reg number */}
+                        <div className="bg-info/5 border border-info/20 rounded-lg p-3">
+                            <p className="text-xs text-muted">
+                                📋 A unique <strong>Registration Number</strong> will be generated for you upon signup. You can use it to log in.
+                            </p>
                         </div>
 
                         <Button

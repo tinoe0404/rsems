@@ -11,7 +11,12 @@ import {
     CheckCircle,
     AlertTriangle,
     ArrowRight,
-    Send
+    Send,
+    Droplets,
+    Thermometer,
+    Heart,
+    Zap,
+    Shield
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { submitDailyLog, type LogSubmissionResult } from "@/actions/submitLog";
@@ -21,6 +26,78 @@ interface SymptomLoggerProps {
 }
 
 type Step = 'select' | 'success';
+
+// Icon mapping by category
+const getCategoryIcon = (category: string) => {
+    switch (category) {
+        case "General":
+            return Thermometer;
+        case "Nausea/Vomiting":
+            return Droplets;
+        case "Toilet/Bowel":
+            return Droplets;
+        case "Toilet/Urinary":
+            return Droplets;
+        case "Vaginal/Pelvic":
+            return Heart;
+        case "Skin":
+            return Shield;
+        case "Pain":
+            return Zap;
+        default:
+            return AlertCircle;
+    }
+};
+
+// Severity styling and labels
+const getSeverityConfig = (severity: number) => {
+    switch (severity) {
+        case 1:
+            return {
+                label: "Mild",
+                sublabel: "Normal / Tolerable",
+                badgeColor: "bg-success/10 text-success-dark border-success/30",
+                cardBorder: "border-success/20 hover:border-success/40",
+                headerBg: "bg-success/5",
+                headerText: "text-success-dark",
+                headerIcon: CheckCircle,
+                dotColor: "bg-success",
+            };
+        case 2:
+            return {
+                label: "Moderate",
+                sublabel: "Needs Monitoring",
+                badgeColor: "bg-warning/10 text-warning-dark border-warning/30",
+                cardBorder: "border-warning/20 hover:border-warning/40",
+                headerBg: "bg-warning/5",
+                headerText: "text-warning-dark",
+                headerIcon: AlertCircle,
+                dotColor: "bg-warning",
+            };
+        case 3:
+            return {
+                label: "Severe",
+                sublabel: "Requires Immediate Attention",
+                badgeColor: "bg-alert/10 text-alert border-alert/30",
+                cardBorder: "border-alert/20 hover:border-alert/40",
+                headerBg: "bg-alert/5",
+                headerText: "text-alert",
+                headerIcon: AlertTriangle,
+                dotColor: "bg-alert",
+            };
+        default:
+            return {
+                label: "None",
+                sublabel: "",
+                badgeColor: "bg-gray-100 text-gray-600 border-gray-200",
+                cardBorder: "border-gray-200",
+                headerBg: "bg-gray-50",
+                headerText: "text-gray-600",
+                headerIcon: CheckCircle,
+                dotColor: "bg-gray-400",
+            };
+    }
+};
 
 export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
     const router = useRouter();
@@ -33,14 +110,32 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionResult, setSubmissionResult] = useState<LogSubmissionResult | null>(null);
 
-    // Filter symptoms
+    // Filter and group symptoms by severity
     const filteredSymptoms = useMemo(() => {
-        if (!searchQuery) return symptoms;
-        const query = searchQuery.toLowerCase();
-        return symptoms.filter((s) =>
-            s.name.toLowerCase().includes(query)
-        );
+        let filtered = symptoms;
+        if (searchQuery) {
+            const query = searchQuery.toLowerCase();
+            filtered = symptoms.filter((s) =>
+                s.name.toLowerCase().includes(query) ||
+                s.category.toLowerCase().includes(query)
+            );
+        }
+        return filtered;
     }, [symptoms, searchQuery]);
+
+    // Group by severity level
+    const groupedSymptoms = useMemo(() => {
+        const groups: Record<number, SymptomMaster[]> = { 1: [], 2: [], 3: [] };
+        filteredSymptoms.forEach((s) => {
+            const sev = s.default_severity;
+            if (groups[sev]) {
+                groups[sev].push(s);
+            } else {
+                groups[1].push(s); // fallback to mild
+            }
+        });
+        return groups;
+    }, [filteredSymptoms]);
 
     // Handlers
     const toggleSymptom = (id: number) => {
@@ -58,10 +153,8 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
 
         setIsSubmitting(true);
         try {
-            // Map selected IDs to the input format expected by server action
             const payload = Array.from(selectedIds).map(id => ({
                 symptomId: id,
-                // notes could be added here if UI supports it
             }));
 
             const result = await submitDailyLog(payload);
@@ -81,19 +174,18 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
         }
     };
 
-    const getSeverityColor = (score: number) => {
+    const getResultColor = (score: number) => {
         if (score >= 3) return "bg-alert/10 text-alert border-alert";
         if (score === 2) return "bg-warning/10 text-warning-dark border-warning";
         return "bg-success/10 text-success-dark border-success";
     };
 
-    // --- RENDER STEPS ---
-
+    // --- RENDER: SUCCESS ---
     if (step === 'success' && submissionResult) {
         const score = submissionResult.score || 0;
         return (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <Card padding="lg" className={cn("border-2 text-center py-10", getSeverityColor(score))}>
+                <Card padding="lg" className={cn("border-2 text-center py-10", getResultColor(score))}>
                     <div className={cn("inline-flex items-center justify-center p-4 rounded-full mb-6 bg-white shadow-sm")}>
                         {score >= 3 ? (
                             <AlertTriangle className="h-12 w-12 text-alert" />
@@ -131,15 +223,33 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
         );
     }
 
-    // Step: 'select'
+    // --- RENDER: SYMPTOM SELECTION ---
+
+    const severityOrder = [1, 2, 3];
+    const hasResults = filteredSymptoms.length > 0;
+
     return (
         <div className="space-y-6">
+            {/* Severity Scale Legend */}
+            <div className="flex flex-wrap gap-3 items-center text-xs font-medium">
+                <span className="text-muted uppercase tracking-wider">Severity:</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success-dark border border-success/20">
+                    <span className="h-2 w-2 rounded-full bg-success" /> 0-1 Mild
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning/10 text-warning-dark border border-warning/20">
+                    <span className="h-2 w-2 rounded-full bg-warning" /> 2 Moderate
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-alert/10 text-alert border border-alert/20">
+                    <span className="h-2 w-2 rounded-full bg-alert" /> 3 Severe
+                </span>
+            </div>
+
             {/* Search Bar */}
             <div className="relative sticky top-20 z-20 bg-background/95 backdrop-blur-sm py-2">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted" />
                 <input
                     type="text"
-                    placeholder="Search symptoms (e.g. Mild Nausea, Severe Pain)..."
+                    placeholder="Search symptoms (e.g. diarrhoea, skin, bladder)..."
                     className="w-full h-12 pl-10 pr-4 rounded-xl border border-border bg-surface text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-lg shadow-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -148,7 +258,7 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
 
             <div className="flex items-center justify-between">
                 <div className="text-sm text-muted font-medium uppercase tracking-wider">
-                    Select all that apply
+                    Tap all symptoms you are experiencing
                 </div>
                 {selectedIds.size > 0 && (
                     <div className="text-sm font-bold text-primary">
@@ -157,45 +267,103 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                 )}
             </div>
 
-            {/* Flat List */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {filteredSymptoms.length > 0 ? (
-                    filteredSymptoms.map((symptom) => {
-                        const isSelected = selectedIds.has(symptom.id);
+            {/* Grouped Symptom Lists */}
+            {hasResults ? (
+                <div className="space-y-8">
+                    {severityOrder.map((severity) => {
+                        const symptomsInGroup = groupedSymptoms[severity] || [];
+                        if (symptomsInGroup.length === 0) return null;
+
+                        const config = getSeverityConfig(severity);
+                        const HeaderIcon = config.headerIcon;
+
                         return (
-                            <button
-                                key={symptom.id}
-                                onClick={() => toggleSymptom(symptom.id)}
-                                className={cn(
-                                    "text-left group flex items-center gap-4 p-4 rounded-xl border transition-all duration-200",
-                                    isSelected
-                                        ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary"
-                                        : "bg-surface border-border hover:border-primary/30 hover:bg-slate-50"
-                                )}
-                            >
+                            <div key={severity} className="space-y-3">
+                                {/* Section Header */}
                                 <div className={cn(
-                                    "h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0",
-                                    isSelected
-                                        ? "bg-primary border-primary"
-                                        : "border-slate-300 group-hover:border-primary/50"
+                                    "flex items-center gap-3 px-4 py-3 rounded-xl",
+                                    config.headerBg
                                 )}>
-                                    {isSelected && <CheckCircle className="h-4 w-4 text-white" />}
+                                    <HeaderIcon className={cn("h-5 w-5", config.headerText)} />
+                                    <div>
+                                        <h3 className={cn("font-bold text-sm", config.headerText)}>
+                                            {config.label}
+                                        </h3>
+                                        <p className="text-xs text-muted">{config.sublabel}</p>
+                                    </div>
                                 </div>
-                                <span className={cn(
-                                    "font-medium text-lg leading-snug",
-                                    isSelected ? "text-primary-dark" : "text-foreground"
-                                )}>
-                                    {symptom.name}
-                                </span>
-                            </button>
+
+                                {/* Symptom Cards */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    {symptomsInGroup.map((symptom) => {
+                                        const isSelected = selectedIds.has(symptom.id);
+                                        const CategoryIcon = getCategoryIcon(symptom.category);
+
+                                        return (
+                                            <button
+                                                key={symptom.id}
+                                                onClick={() => toggleSymptom(symptom.id)}
+                                                className={cn(
+                                                    "text-left group flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200",
+                                                    isSelected
+                                                        ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary"
+                                                        : cn("bg-surface", config.cardBorder)
+                                                )}
+                                            >
+                                                {/* Checkbox */}
+                                                <div className={cn(
+                                                    "h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0",
+                                                    isSelected
+                                                        ? "bg-primary border-primary"
+                                                        : "border-slate-300 group-hover:border-primary/50"
+                                                )}>
+                                                    {isSelected && <CheckCircle className="h-4 w-4 text-white" />}
+                                                </div>
+
+                                                {/* Icon */}
+                                                <div className={cn(
+                                                    "h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0",
+                                                    isSelected ? "bg-primary/10" : config.headerBg
+                                                )}>
+                                                    <CategoryIcon className={cn(
+                                                        "h-5 w-5",
+                                                        isSelected ? "text-primary" : config.headerText
+                                                    )} />
+                                                </div>
+
+                                                {/* Text */}
+                                                <div className="flex-1 min-w-0">
+                                                    <span className={cn(
+                                                        "font-medium text-base leading-snug block",
+                                                        isSelected ? "text-primary-dark" : "text-foreground"
+                                                    )}>
+                                                        {symptom.name}
+                                                    </span>
+                                                    {symptom.description && (
+                                                        <span className="text-xs text-muted block mt-0.5 truncate">
+                                                            {symptom.description}
+                                                        </span>
+                                                    )}
+                                                </div>
+
+                                                {/* Severity dot */}
+                                                <div className={cn(
+                                                    "h-2.5 w-2.5 rounded-full flex-shrink-0",
+                                                    config.dotColor
+                                                )} />
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         );
-                    })
-                ) : (
-                    <div className="col-span-full py-12 text-center text-muted">
-                        <p>No symptoms found matching &quot;{searchQuery}&quot;</p>
-                    </div>
-                )}
-            </div>
+                    })}
+                </div>
+            ) : (
+                <div className="col-span-full py-12 text-center text-muted">
+                    <p>No symptoms found matching &quot;{searchQuery}&quot;</p>
+                </div>
+            )}
 
             {/* Bottom Floating Action Bar */}
             <div className="fixed bottom-0 left-0 right-0 p-4 z-40 bg-gradient-to-t from-background via-background to-transparent pb-6 pt-12 pointer-events-none">

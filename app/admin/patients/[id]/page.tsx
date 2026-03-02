@@ -26,6 +26,7 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
     const profile = profileData as {
         id: string;
         full_name: string;
+        registration_number: string | null;
         cancer_type: string;
         phone_number: string | null;
         date_of_birth: string | null;
@@ -83,7 +84,14 @@ export default async function PatientProfilePage({ params }: { params: Promise<{
                     </Link>
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">{profile.full_name}</h1>
-                        <p className="text-sm text-gray-500">Patient ID: {profile.id}</p>
+                        <div className="flex items-center gap-3 mt-1">
+                            {profile.registration_number && (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                                    {profile.registration_number}
+                                </span>
+                            )}
+                            <p className="text-sm text-gray-500">ID: {profile.id.slice(0, 8)}...</p>
+                        </div>
                     </div>
                 </div>
                 <div className="flex gap-3">

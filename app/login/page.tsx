@@ -10,40 +10,60 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { AuthError } from "@/components/auth/AuthError";
 import { LoadingSpinner } from "@/components/auth/LoadingSpinner";
-import { Heart, Mail, Lock } from "lucide-react";
+import { lookupEmailByRegNumber } from "@/actions/lookupPatient";
+import { Heart, Mail, Lock, Hash } from "lucide-react";
 
 export default function LoginPage() {
     const router = useRouter();
-    const [hospitalId, setHospitalId] = useState("");
-    const [email, setEmail] = useState("");
+    const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
 
     const supabase = createClient();
 
+    const isEmail = (value: string) => value.includes("@");
+
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
         setIsLoading(true);
 
-        if (hospitalId.trim() !== "3") {
-            setError("Invalid Hospital Number. Please check your details.");
-            setIsLoading(false);
-            return;
-        }
-
         try {
-            const { data, error: signInError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            let loginEmail = identifier.trim();
+
+            // If not an email, look up by registration number
+            if (!isEmail(loginEmail)) {
+                const { email, error: lookupError } =
+                    await lookupEmailByRegNumber(loginEmail);
+                if (lookupError || !email) {
+                    setError(
+                        lookupError ||
+                        "Registration number not found. Please check and try again."
+                    );
+                    setIsLoading(false);
+                    return;
+                }
+                loginEmail = email;
+            }
+
+            const { data, error: signInError } =
+                await supabase.auth.signInWithPassword({
+                    email: loginEmail,
+                    password,
+                });
 
             if (signInError) {
                 if (signInError.message.includes("Invalid login credentials")) {
-                    setError("Email or password is incorrect. Please try again.");
-                } else if (signInError.message.includes("Email not confirmed")) {
-                    setError("Please verify your email address before logging in.");
+                    setError(
+                        "Email/Registration Number or password is incorrect. Please try again."
+                    );
+                } else if (
+                    signInError.message.includes("Email not confirmed")
+                ) {
+                    setError(
+                        "Please verify your email address before logging in."
+                    );
                 } else {
                     setError(signInError.message);
                 }
@@ -62,10 +82,10 @@ export default function LoginPage() {
                 const profile = profileData as Profile | null;
 
                 if (profile?.role === "clinician") {
-                    // Clinician trying to login on patient portal
-                    setError("Please use the Clinician Portal to login. You'll be redirected...");
+                    setError(
+                        "Please use the Clinician Portal to login. You'll be redirected..."
+                    );
                     setIsLoading(false);
-                    // Sign them out and redirect to clinician login
                     await supabase.auth.signOut();
                     setTimeout(() => {
                         router.push("/admin/login");
@@ -107,23 +127,12 @@ export default function LoginPage() {
                         <AuthError message={error} />
 
                         <Input
-                            label="Hospital Number"
+                            label="Email or Registration Number"
                             type="text"
-                            id="hospitalId"
-                            value={hospitalId}
-                            onChange={(e) => setHospitalId(e.target.value)}
-                            placeholder="Enter Hospital ID"
-                            required
-                            disabled={isLoading}
-                        />
-
-                        <Input
-                            label="Email Address"
-                            type="email"
-                            id="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="you@example.com"
+                            id="identifier"
+                            value={identifier}
+                            onChange={(e) => setIdentifier(e.target.value)}
+                            placeholder="you@example.com or RSEMS-1001"
                             required
                             disabled={isLoading}
                             autoComplete="email"
@@ -175,6 +184,14 @@ export default function LoginPage() {
                         </Button>
                     </form>
                 </Card>
+
+                {/* Helper text about reg number */}
+                <div className="mt-4 p-3 bg-surface rounded-lg border border-border">
+                    <p className="text-xs text-muted text-center">
+                        <Hash className="inline h-3 w-3 mr-1" />
+                        Your Registration Number (e.g. <strong>RSEMS-1001</strong>) was provided when you signed up.
+                    </p>
+                </div>
 
                 {/* Sign up link */}
                 <p className="text-center mt-6 text-sm sm:text-base text-muted">

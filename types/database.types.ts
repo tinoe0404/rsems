@@ -55,6 +55,7 @@ export type Profile = {
     id: string; // UUID
     full_name: string;
     role: UserRole;
+    registration_number: string | null; // Auto-generated RSEMS-XXXX
     cancer_type: string;
     treatment_start_date: string | null; // ISO date string
     phone_number: string | null;
@@ -70,6 +71,7 @@ export type ProfileInsert = {
     id: string; // Must match auth.users.id
     full_name: string;
     role?: UserRole;
+    registration_number?: string | null;
     cancer_type?: string;
     treatment_start_date?: string | null;
     phone_number?: string | null;
@@ -82,6 +84,7 @@ export type ProfileInsert = {
 export type ProfileUpdate = {
     full_name?: string;
     role?: UserRole;
+    registration_number?: string | null;
     cancer_type?: string;
     treatment_start_date?: string | null;
     phone_number?: string | null;
