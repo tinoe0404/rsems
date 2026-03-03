@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { type SymptomMaster } from "@/types/database.types";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -161,14 +162,15 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
 
             if (result.success) {
                 setSubmissionResult(result);
+                toast.success("Symptoms logged successfully");
                 setStep('success');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } else {
-                alert(result.error || "Failed to submit log");
+                toast.error(result.error || "Failed to submit log");
             }
         } catch (error) {
             console.error(error);
-            alert("Something went wrong");
+            toast.error("Something went wrong");
         } finally {
             setIsSubmitting(false);
         }

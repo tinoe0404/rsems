@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import { type Profile } from "@/types/database.types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -58,6 +59,7 @@ export default function ClinicianLoginPage() {
                 const profile = profileData as Profile | null;
 
                 if (profile?.role === "clinician") {
+                    toast.success("Welcome to the Clinician Portal");
                     router.push("/admin/dashboard");
                     router.refresh();
                 } else {

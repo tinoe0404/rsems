@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -45,6 +46,7 @@ export default function SignupPage() {
     const handleCopyRegNumber = async () => {
         if (regNumber) {
             await navigator.clipboard.writeText(regNumber);
+            toast.success("Registration number copied to clipboard");
             setCopied(true);
             setTimeout(() => setCopied(false), 2000);
         }
@@ -112,6 +114,7 @@ export default function SignupPage() {
                 );
 
                 setRegNumber(registrationNumber);
+                toast.success("Account created successfully!");
                 setRegistrationComplete(true);
             }
         } catch (err: any) {

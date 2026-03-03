@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Heart, Shield, Users, LogOut, LayoutDashboard } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 
 export default function Home() {
   const router = useRouter();
@@ -53,6 +54,7 @@ export default function Home() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    toast.success("Logged out successfully");
     router.push("/login"); // or router.refresh() depending on your preference
   };
 

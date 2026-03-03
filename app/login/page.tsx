@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import { type Profile } from "@/types/database.types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -95,6 +96,7 @@ export default function LoginPage() {
                     router.push("/onboarding");
                     router.refresh();
                 } else {
+                    toast.success("Logged in successfully");
                     router.push("/dashboard");
                     router.refresh();
                 }

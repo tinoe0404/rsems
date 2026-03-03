@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import { type Profile, type ProfileUpdate } from "@/types/database.types";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -108,6 +109,7 @@ export default function OnboardingPage() {
             }
 
             // Success! Redirect to dashboard
+            toast.success("Profile updated successfully!");
             router.push("/dashboard");
             router.refresh();
         } catch (err) {
