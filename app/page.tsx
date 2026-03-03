@@ -1,12 +1,69 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { Heart, Shield, Users } from "lucide-react";
+import { Heart, Shield, Users, LogOut, LayoutDashboard } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function Home() {
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function checkSession() {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session && mounted) {
+        setIsLoggedIn(true);
+        // Get user role
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .single();
+
+        if (profile && mounted) {
+          setUserRole((profile as any).role);
+        }
+      } else if (mounted) {
+        setIsLoggedIn(false);
+      }
+    }
+
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (mounted) {
+        setIsLoggedIn(!!session);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/login"); // or router.refresh() depending on your preference
+  };
+
+  const handleDashboardRedirect = () => {
+    if (userRole === "clinician") {
+      router.push("/admin/dashboard");
+    } else {
+      router.push("/dashboard"); // This will redirect to onboarding if needed
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -36,26 +93,54 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Login Buttons */}
-          <div className="mb-16 flex flex-col gap-4 sm:flex-row sm:gap-6">
-            <Button
-              size="lg"
-              variant="primary"
-              className="w-full sm:w-auto"
-              onClick={() => router.push("/login")}
-            >
-              <Users className="mr-2 h-5 w-5" />
-              Patient Login
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={() => router.push("/admin/login")}
-            >
-              <Shield className="mr-2 h-5 w-5" />
-              Clinician Login
-            </Button>
+          {/* Login Buttons or Dashboard */}
+          <div className="mb-16 flex flex-col gap-4 sm:flex-row sm:gap-6 min-h-[50px]">
+            {isLoggedIn === null ? (
+              // Loading state placeholder to prevent content shift
+              <div className="w-full sm:w-[350px] flex justify-center h-12"></div>
+            ) : isLoggedIn ? (
+              <>
+                <Button
+                  size="lg"
+                  variant="primary"
+                  className="w-full sm:w-auto"
+                  onClick={handleDashboardRedirect}
+                >
+                  <LayoutDashboard className="mr-2 h-5 w-5" />
+                  Go to Dashboard
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto text-alert border-alert/20 hover:bg-alert/10 hover:text-alert"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="mr-2 h-5 w-5" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  size="lg"
+                  variant="primary"
+                  className="w-full sm:w-auto"
+                  onClick={() => router.push("/login")}
+                >
+                  <Users className="mr-2 h-5 w-5" />
+                  Patient Login
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() => router.push("/admin/login")}
+                >
+                  <Shield className="mr-2 h-5 w-5" />
+                  Clinician Login
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Feature Cards */}

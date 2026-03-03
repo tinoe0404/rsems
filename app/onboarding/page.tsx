@@ -243,11 +243,16 @@ export default function OnboardingPage() {
                                 type="button"
                                 variant="outline"
                                 size="lg"
-                                className="w-1/3"
-                                onClick={() => router.push("/login")}
+                                className="w-1/3 text-alert border-alert/20 hover:bg-alert/10 hover:text-alert"
+                                onClick={async () => {
+                                    setIsLoading(true);
+                                    await supabase.auth.signOut();
+                                    router.push("/login");
+                                    router.refresh();
+                                }}
                                 disabled={isLoading}
                             >
-                                Back
+                                Sign Out
                             </Button>
                             <Button
                                 type="submit"
