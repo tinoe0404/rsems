@@ -99,6 +99,11 @@ export async function updateSession(request: NextRequest) {
 
         // Handle authenticated users on login/signup pages
         if (pathname === '/login' || pathname === '/signup') {
+            // Do not redirect if it's a Next.js Server Action
+            if (request.headers.has('next-action')) {
+                return supabaseResponse;
+            }
+
             const url = request.nextUrl.clone();
             // Redirect based on role
             if (userRole === 'clinician') {
@@ -111,6 +116,11 @@ export async function updateSession(request: NextRequest) {
 
         // Handle authenticated users on admin login page
         if (pathname === '/admin/login') {
+            // Do not redirect if it's a Next.js Server Action
+            if (request.headers.has('next-action')) {
+                return supabaseResponse;
+            }
+
             const url = request.nextUrl.clone();
             if (userRole === 'clinician') {
                 url.pathname = '/admin/dashboard';

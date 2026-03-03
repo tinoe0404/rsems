@@ -114,8 +114,9 @@ export default function SignupPage() {
                 setRegNumber(registrationNumber);
                 setRegistrationComplete(true);
             }
-        } catch (err) {
-            setError("An unexpected error occurred. Please try again.");
+        } catch (err: any) {
+            console.error("Signup Catch Error:", err);
+            setError(`Unexpected error: ${err?.message || String(err)}`);
         } finally {
             setIsLoading(false);
         }
