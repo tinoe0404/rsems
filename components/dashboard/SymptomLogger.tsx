@@ -106,7 +106,7 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
     const [searchQuery, setSearchQuery] = useState("");
 
     // Selection State
-    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [selectedSymptoms, setSelectedSymptoms] = useState<Record<number, string>>({});
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submissionResult, setSubmissionResult] = useState<LogSubmissionResult | null>(null);
@@ -116,7 +116,7 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
         let filtered = symptoms;
         if (searchQuery) {
             const query = searchQuery.toLowerCase();
-            filtered = symptoms.filter((s) =>
+            filtered = symptoms.filter((s: SymptomMaster) =>
                 s.name.toLowerCase().includes(query) ||
                 s.category.toLowerCase().includes(query)
             );
@@ -127,7 +127,7 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
     // Group by severity level
     const groupedSymptoms = useMemo(() => {
         const groups: Record<number, SymptomMaster[]> = { 1: [], 2: [], 3: [] };
-        filteredSymptoms.forEach((s) => {
+        filteredSymptoms.forEach((s: SymptomMaster) => {
             const sev = s.default_severity;
             if (groups[sev]) {
                 groups[sev].push(s);
@@ -140,22 +140,36 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
 
     // Handlers
     const toggleSymptom = (id: number) => {
-        const next = new Set(selectedIds);
-        if (next.has(id)) {
-            next.delete(id);
-        } else {
-            next.add(id);
-        }
-        setSelectedIds(next);
+        setSelectedSymptoms((prev: Record<number, string>) => {
+            const next = { ...prev };
+            if (id in next) {
+                delete next[id];
+            } else {
+                next[id] = "";
+            }
+            return next;
+        });
+    };
+
+    const updateNote = (id: number, note: string) => {
+        setSelectedSymptoms((prev: Record<number, string>) => {
+            if (!(id in prev)) return prev;
+            return {
+                ...prev,
+                [id]: note
+            };
+        });
     };
 
     const handleSubmit = async () => {
-        if (selectedIds.size === 0) return;
+        const selectedIds = Object.keys(selectedSymptoms).map(Number);
+        if (selectedIds.length === 0) return;
 
         setIsSubmitting(true);
         try {
-            const payload = Array.from(selectedIds).map(id => ({
+            const payload = selectedIds.map(id => ({
                 symptomId: id,
+                notes: selectedSymptoms[id] || undefined
             }));
 
             const result = await submitDailyLog(payload);
@@ -262,9 +276,9 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                 <div className="text-sm text-muted font-medium uppercase tracking-wider">
                     Tap all symptoms you are experiencing
                 </div>
-                {selectedIds.size > 0 && (
+                {Object.keys(selectedSymptoms).length > 0 && (
                     <div className="text-sm font-bold text-primary">
-                        {selectedIds.size} selected
+                        {Object.keys(selectedSymptoms).length} selected
                     </div>
                 )}
             </div>
@@ -298,62 +312,78 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                                 {/* Symptom Cards */}
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {symptomsInGroup.map((symptom) => {
-                                        const isSelected = selectedIds.has(symptom.id);
+                                        const isSelected = symptom.id in selectedSymptoms;
                                         const CategoryIcon = getCategoryIcon(symptom.category);
 
                                         return (
-                                            <button
+                                            <div
                                                 key={symptom.id}
-                                                onClick={() => toggleSymptom(symptom.id)}
                                                 className={cn(
-                                                    "text-left group flex items-center gap-4 p-4 rounded-xl border-2 transition-all duration-200",
+                                                    "flex flex-col rounded-xl border-2 transition-all duration-200",
                                                     isSelected
                                                         ? "bg-primary/5 border-primary shadow-sm ring-1 ring-primary"
                                                         : cn("bg-surface", config.cardBorder)
                                                 )}
                                             >
-                                                {/* Checkbox */}
-                                                <div className={cn(
-                                                    "h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0",
-                                                    isSelected
-                                                        ? "bg-primary border-primary"
-                                                        : "border-slate-300 group-hover:border-primary/50"
-                                                )}>
-                                                    {isSelected && <CheckCircle className="h-4 w-4 text-white" />}
-                                                </div>
-
-                                                {/* Icon */}
-                                                <div className={cn(
-                                                    "h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0",
-                                                    isSelected ? "bg-primary/10" : config.headerBg
-                                                )}>
-                                                    <CategoryIcon className={cn(
-                                                        "h-5 w-5",
-                                                        isSelected ? "text-primary" : config.headerText
-                                                    )} />
-                                                </div>
-
-                                                {/* Text */}
-                                                <div className="flex-1 min-w-0">
-                                                    <span className={cn(
-                                                        "font-medium text-base leading-snug block",
-                                                        isSelected ? "text-primary-dark" : "text-foreground"
+                                                <button
+                                                    onClick={() => toggleSymptom(symptom.id)}
+                                                    className="text-left group flex items-center gap-4 p-4 w-full"
+                                                >
+                                                    {/* Checkbox */}
+                                                    <div className={cn(
+                                                        "h-6 w-6 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0",
+                                                        isSelected
+                                                            ? "bg-primary border-primary"
+                                                            : "border-slate-300 group-hover:border-primary/50"
                                                     )}>
-                                                        {symptom.name}
-                                                    </span>
-                                                    {symptom.description && (
-                                                        <span className="text-xs text-muted block mt-0.5 truncate">
-                                                            {symptom.description}
-                                                        </span>
-                                                    )}
-                                                </div>
+                                                        {isSelected && <CheckCircle className="h-4 w-4 text-white" />}
+                                                    </div>
 
-                                                {/* Severity dot */}
-                                                <div className={cn(
-                                                    "h-2.5 w-2.5 rounded-full flex-shrink-0",
-                                                    config.dotColor
-                                                )} />
-                                            </button>
+                                                    {/* Icon */}
+                                                    <div className={cn(
+                                                        "h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0",
+                                                        isSelected ? "bg-primary/10" : config.headerBg
+                                                    )}>
+                                                        <CategoryIcon className={cn(
+                                                            "h-5 w-5",
+                                                            isSelected ? "text-primary" : config.headerText
+                                                        )} />
+                                                    </div>
+
+                                                    {/* Text */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <span className={cn(
+                                                            "font-medium text-base leading-snug block",
+                                                            isSelected ? "text-primary-dark" : "text-foreground"
+                                                        )}>
+                                                            {symptom.name}
+                                                        </span>
+                                                        {symptom.description && (
+                                                            <span className="text-xs text-muted block mt-0.5 truncate">
+                                                                {symptom.description}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Severity dot */}
+                                                    <div className={cn(
+                                                        "h-2.5 w-2.5 rounded-full flex-shrink-0",
+                                                        config.dotColor
+                                                    )} />
+                                                </button>
+                                                {isSelected && (
+                                                    <div className="px-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                                                        <textarea
+                                                            placeholder="Add details about this symptom (optional)"
+                                                            value={selectedSymptoms[symptom.id] || ""}
+                                                            onChange={(e: any) => updateNote(symptom.id, e.target.value)}
+                                                            className="w-full text-sm p-3 rounded-lg border border-border bg-white text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none shadow-sm"
+                                                            rows={2}
+                                                            maxLength={500}
+                                                        />
+                                                    </div>
+                                                )}
+                                            </div>
                                         );
                                     })}
                                 </div>
@@ -374,7 +404,7 @@ export function SymptomLogger({ symptoms }: SymptomLoggerProps) {
                         size="lg"
                         className={cn(
                             "w-full shadow-xl transition-all duration-300 transform font-bold text-lg h-14",
-                            selectedIds.size > 0 ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
+                            Object.keys(selectedSymptoms).length > 0 ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
                         )}
                         onClick={handleSubmit}
                         disabled={isSubmitting}
