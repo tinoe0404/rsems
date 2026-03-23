@@ -119,12 +119,19 @@ export function AdminLogsTable({ logs: initialLogs }: AdminLogsTableProps) {
                                             {getSeverityBadge(log.calculated_risk_score)}
                                         </td>
                                         <td className="px-6 py-4 max-w-xs">
-                                            <div className="flex flex-wrap gap-1">
+                                            <div className="flex flex-col gap-1.5">
                                                 {log.symptoms_entry?.slice(0, 3).map((sym: any, i: number) => (
-                                                    <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 border border-gray-200">
-                                                        {sym.symptom_name}
-                                                        {summarySeverityIndicator(sym.severity)}
-                                                    </span>
+                                                    <div key={i} className="flex flex-col gap-0.5 w-full">
+                                                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 border border-gray-200 w-fit">
+                                                            {sym.symptom_name}
+                                                            {summarySeverityIndicator(sym.severity)}
+                                                        </span>
+                                                        {sym.notes && (
+                                                            <span className="text-xs text-gray-500 italic pl-2 border-l-2 border-gray-200">
+                                                                "{sym.notes}"
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 ))}
                                                 {(log.symptoms_entry?.length || 0) > 3 && (
                                                     <span className="text-xs text-gray-500 self-center">
@@ -212,12 +219,19 @@ export function AdminLogsTable({ logs: initialLogs }: AdminLogsTableProps) {
                                     <div className="w-5 flex justify-center mt-0.5">
                                         <AlertCircle className="h-4 w-4 text-gray-400" />
                                     </div>
-                                    <div className="flex flex-wrap gap-1 flex-1 min-w-0">
+                                    <div className="flex flex-col gap-1.5 flex-1 min-w-0">
                                         {log.symptoms_entry?.slice(0, 4).map((sym: any, i: number) => (
-                                            <span key={i} className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 border border-gray-200">
-                                                {sym.symptom_name}
-                                                {summarySeverityIndicator(sym.severity)}
-                                            </span>
+                                            <div key={i} className="flex flex-col gap-0.5 w-full">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 border border-gray-200 w-fit">
+                                                    {sym.symptom_name}
+                                                    {summarySeverityIndicator(sym.severity)}
+                                                </span>
+                                                {sym.notes && (
+                                                    <span className="text-xs text-gray-500 italic pl-2 border-l-2 border-gray-200 truncate">
+                                                        "{sym.notes}"
+                                                    </span>
+                                                )}
+                                            </div>
                                         ))}
                                         {(log.symptoms_entry?.length || 0) > 4 && (
                                             <span className="text-xs text-gray-500 self-center">
